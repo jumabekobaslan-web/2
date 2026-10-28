@@ -1,0 +1,13 @@
+{
+  "name": "lifefit-health-app",
+  "version": "2.0.0",
+  "description": "LifeFit - Мой контроль здоровья с бэкендом, сортировкой и геймификацией",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["health", "tracker", "gamification", "fitness"],
+  "author": "",
+  "license": "MIT"
+}

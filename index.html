@@ -1,0 +1,4358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeFit — Умный контроль здоровья и привычек</title>
+<meta name="description" content="LifeFit — Комплексная система отслеживания здоровья, активности, питания, сна и привычек с геймификацией и бэкенд синхронизацией.">
+
+<style>
+:root {
+    --bg: #07110d;
+    --bg2: #0b1813;
+    --card: rgba(17, 34, 26, 0.88);
+    --card2: #13251c;
+    --card-hover: rgba(26, 50, 39, 0.95);
+    --text: #f3fff7;
+    --muted: #8da99a;
+    --green: #42e58b;
+    --green2: #1bb86b;
+    --blue: #48a9ff;
+    --orange: #ffad42;
+    --red: #ff6475;
+    --purple: #9b7cff;
+    --gold: #ffd166;
+    --border: rgba(255, 255, 255, 0.09);
+    --border-accent: rgba(66, 229, 139, 0.35);
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    --radius: 20px;
+    --radius-sm: 12px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:
+        radial-gradient(circle at 12% 0%, rgba(66, 229, 139, 0.12), transparent 32%),
+        radial-gradient(circle at 88% 18%, rgba(72, 169, 255, 0.09), transparent 30%),
+        radial-gradient(circle at 50% 80%, rgba(155, 124, 255, 0.05), transparent 40%),
+        var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 255px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    padding: 24px 16px;
+    background: rgba(7, 17, 13, 0.94);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(24px);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.logo-icon {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--green), #16a765);
+    box-shadow: 0 10px 25px rgba(66, 229, 139, 0.25);
+    font-size: 22px;
+    color: #04140b;
+}
+
+.logo h1 {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.logo span {
+    color: var(--green);
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.menu button {
+    background: transparent;
+    color: var(--muted);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.menu button:hover,
+.menu button.active {
+    background: rgba(66, 229, 139, 0.1);
+    color: var(--text);
+    border-color: rgba(66, 229, 139, 0.2);
+}
+
+.menu button.active {
+    box-shadow: inset 3px 0 var(--green);
+    font-weight: 700;
+}
+
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.theme-btn, .sync-btn {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.theme-btn:hover, .sync-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* MAIN */
+.main {
+    margin-left: 255px;
+    width: calc(100% - 255px);
+    padding: 30px;
+    max-width: 1600px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.greeting h2 {
+    font-size: clamp(22px, 2.5vw, 32px);
+    font-weight: 800;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+}
+
+.greeting p {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.backend-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.backend-pill.online {
+    border-color: rgba(66, 229, 139, 0.4);
+    color: var(--green);
+}
+
+.backend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffad42;
+}
+
+.backend-pill.online .backend-dot {
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+}
+
+.coin-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(255, 209, 102, 0.18), rgba(255, 209, 102, 0.06));
+    border: 1px solid rgba(255, 209, 102, 0.35);
+    padding: 8px 14px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--gold);
+    cursor: pointer;
+}
+
+.coin-badge:hover {
+    border-color: var(--gold);
+    transform: translateY(-1px);
+}
+
+.streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 100, 117, 0.1);
+    border: 1px solid rgba(255, 100, 117, 0.3);
+    padding: 8px 14px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--red);
+}
+
+.date-box {
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+
+/* HERO & CARDS */
+.hero {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.health-card,
+.level-card,
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.2s ease;
+}
+
+.health-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(19, 37, 28, 0.96), rgba(11, 24, 18, 0.92));
+}
+
+.health-card::after {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(66, 229, 139, 0.12), transparent 70%);
+    right: -70px;
+    top: -80px;
+    pointer-events: none;
+}
+
+.health-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.health-title {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.health-number {
+    font-size: 54px;
+    font-weight: 900;
+    color: var(--green);
+    line-height: 1;
+}
+
+.health-number small {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.health-status {
+    padding: 8px 14px;
+    background: rgba(66, 229, 139, 0.12);
+    border: 1px solid rgba(66, 229, 139, 0.25);
+    color: var(--green);
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.progress {
+    height: 10px;
+    background: #15291e;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 18px 0 12px;
+}
+
+.progress div {
+    height: 100%;
+    background: linear-gradient(90deg, #1bb86b, #42e58b);
+    border-radius: inherit;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.health-footer {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* LEVEL CARD */
+.level-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.level {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.xp {
+    color: var(--purple);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.level-desc {
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.xp-bar {
+    height: 10px;
+    background: #19202c;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.xp-bar div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), #d09cff);
+    border-radius: inherit;
+    transition: width 0.5s ease;
+}
+
+/* STATS ROW */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+.stat-name {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+.stat-change {
+    color: var(--green);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* GRID LAYOUTS */
+.grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.85fr;
+    gap: 20px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.card-title h3 {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* CONTROLS & BUTTONS */
+.primary {
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    color: #04140b;
+    padding: 11px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 20px rgba(66, 229, 139, 0.2);
+}
+
+.primary:hover {
+    filter: brightness(1.08);
+}
+
+.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.secondary:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.danger {
+    background: rgba(255, 100, 117, 0.12);
+    color: var(--red);
+    border: 1px solid rgba(255, 100, 117, 0.3);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.danger:hover {
+    background: rgba(255, 100, 117, 0.22);
+}
+
+/* SORT & FILTER BAR */
+.sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.sort-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sort-select, .filter-input {
+    background: #0b1812;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+}
+
+.sort-select:focus, .filter-input:focus {
+    border-color: var(--green);
+}
+
+.filter-input {
+    flex: 1;
+    min-width: 140px;
+}
+
+/* DAILY TASKS */
+.daily-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.task:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(66, 229, 139, 0.25);
+}
+
+.task-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.task-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(66, 229, 139, 0.1);
+    font-size: 20px;
+}
+
+.task-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.task-time {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.check {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #345143;
+    background: transparent;
+    color: transparent;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.check.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: #062011;
+    transform: scale(1.05);
+}
+
+/* WATER */
+.water {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+.water-main {
+    text-align: center;
+    padding: 22px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(72, 169, 255, 0.12), rgba(72, 169, 255, 0.03));
+    border: 1px solid rgba(72, 169, 255, 0.2);
+}
+
+.water-value {
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--blue);
+}
+
+.water-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.water-buttons button {
+    padding: 12px 6px;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--text);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.water-buttons button:hover {
+    border-color: var(--blue);
+    background: rgba(72, 169, 255, 0.12);
+}
+
+/* MOOD */
+.moods {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.mood {
+    padding: 12px 4px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    font-size: 24px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.mood:hover {
+    transform: scale(1.1);
+}
+
+.mood.selected {
+    background: rgba(66, 229, 139, 0.18);
+    border-color: var(--green);
+    transform: scale(1.08);
+}
+
+/* CHART */
+.chart {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 8px;
+    padding-top: 15px;
+}
+
+.bar-wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.bar {
+    width: 100%;
+    max-width: 38px;
+    background: linear-gradient(180deg, var(--green), #168c55);
+    border-radius: 8px 8px 3px 3px;
+    min-height: 8px;
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bar-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* SCHEDULE */
+.schedule {
+    display: grid;
+    gap: 8px;
+}
+
+.schedule-row {
+    display: grid;
+    grid-template-columns: 75px 40px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.schedule-time {
+    color: var(--green);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.schedule-icon {
+    font-size: 20px;
+}
+
+.schedule-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.schedule-name small {
+    display: block;
+    color: var(--muted);
+    margin-top: 2px;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+/* ACHIEVEMENTS */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.achievement {
+    padding: 18px;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.achievement.unlocked {
+    background: linear-gradient(145deg, rgba(66, 229, 139, 0.08), rgba(255, 209, 102, 0.05));
+    border-color: rgba(66, 229, 139, 0.3);
+}
+
+.achievement-icon {
+    font-size: 34px;
+    margin-bottom: 8px;
+    filter: grayscale(1);
+    opacity: 0.35;
+    transition: 0.3s;
+}
+
+.achievement.unlocked .achievement-icon {
+    filter: none;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.achievement b {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.achievement p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.achievement .reward {
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 700;
+}
+
+/* WEEK & TABLES */
+.week-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.week-card {
+    padding: 18px;
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
+.week-card .big {
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+.week-card small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.custom-table th {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 14px;
+    border: none;
+}
+
+.custom-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-table th.sortable:hover {
+    color: var(--green);
+}
+
+.custom-table td {
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.025);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.custom-table tr td:first-child {
+    border-left: 1px solid var(--border);
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.custom-table tr td:last-child {
+    border-right: 1px solid var(--border);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.custom-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* CHARACTER & SHOP */
+.character-layout {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 20px;
+}
+
+.character-stage {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.character-canvas {
+    width: 100%;
+    max-width: 250px;
+    aspect-ratio: 1/1.1;
+    position: relative;
+    margin: 10px auto 16px;
+}
+
+.character-canvas svg {
+    width: 100%;
+    height: 100%;
+}
+
+.character-name {
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.character-level {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.character-coin-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 209, 102, 0.1);
+    border: 1px solid rgba(255, 209, 102, 0.3);
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-weight: 800;
+    color: var(--gold);
+    width: 100%;
+}
+
+.shop-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.shop-tab {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.shop-tab.active {
+    background: rgba(66, 229, 139, 0.15);
+    border-color: var(--green);
+    color: var(--text);
+}
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.shop-item {
+    padding: 14px 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border);
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.shop-item.equipped {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px var(--green) inset;
+}
+
+.shop-item .swatch {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.shop-item .icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.shop-item b {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.shop-item .price {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.shop-item button {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--text);
+}
+
+.shop-item button.buy {
+    background: linear-gradient(135deg, var(--gold), #ffb84d);
+    color: #2b1a00;
+    border: 0;
+    font-weight: 700;
+}
+
+.shop-item button.equip {
+    background: rgba(66, 229, 139, 0.15);
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.shop-item .badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    color: var(--green);
+    background: rgba(66, 229, 139, 0.15);
+    padding: 2px 6px;
+    border-radius: 50px;
+    font-weight: 700;
+}
+
+/* WORKOUTS & TIMER */
+.stopwatch-box {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+
+.stopwatch-time {
+    font-size: 48px;
+    font-family: monospace;
+    font-weight: 800;
+    color: var(--green);
+    margin: 10px 0;
+}
+
+.stopwatch-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* FORMS & MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-box {
+    width: 100%;
+    max-width: 540px;
+    background: #0d1e16;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-box h2 {
+    font-size: 20px;
+    margin-bottom: 18px;
+}
+
+.form {
+    display: grid;
+    gap: 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.form input, .form select, .form textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #08140e;
+    color: var(--text);
+    outline: none;
+    font-size: 14px;
+}
+
+.form input:focus, .form select:focus, .form textarea:focus {
+    border-color: var(--green);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+/* NEW DAY BANNER */
+.new-day-box {
+    padding: 22px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(66, 229, 139, 0.12), rgba(72, 169, 255, 0.08));
+    border: 1px solid rgba(66, 229, 139, 0.25);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.new-day-box h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.new-day-box p {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+/* NOTIFICATIONS & CONFETTI */
+.notification {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    background: #122b1f;
+    border: 1px solid rgba(66, 229, 139, 0.35);
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    transform: translateY(120px);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    box-shadow: var(--shadow);
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+#confettiCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 300;
+}
+
+/* LIGHT THEME */
+body.light {
+    --bg: #f3f7f4;
+    --bg2: #ffffff;
+    --card: #ffffff;
+    --card2: #f4f8f5;
+    --card-hover: #eaf2ed;
+    --text: #0e1e15;
+    --muted: #597364;
+    --border: rgba(10, 50, 30, 0.12);
+    --shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+}
+
+body.light .sidebar {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+body.light .health-card {
+    background: linear-gradient(145deg, #ffffff, #f0f7f2);
+}
+
+body.light .modal-box {
+    background: #ffffff;
+}
+
+body.light .form input,
+body.light .form select,
+body.light .form textarea,
+body.light .sort-select,
+body.light .filter-input {
+    background: #f4f8f5;
+    color: #0e1e15;
+}
+
+body.light .notification {
+    background: #ffffff;
+    color: #0e1e15;
+}
+
+/* PAGES */
+.page {
+    display: none;
+    animation: fadeIn 0.25s ease;
+}
+
+.page.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVENESS */
+.mobile-menu {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .hero, .grid, .grid-2, .character-layout {
+        grid-template-columns: 1fr;
+    }
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .week-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+    }
+    .mobile-menu {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-sm);
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border);
+        font-size: 20px;
+    }
+    .stats {
+        grid-template-columns: 1fr;
+    }
+    .shop-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .water-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+    <div>
+        <div class="logo">
+            <div class="logo-icon">❤</div>
+            <h1>Life<span>Fit</span></h1>
+        </div>
+
+        <nav class="menu">
+            <button class="active" onclick="showPage('dashboard', this)">
+                🏠 Главная
+            </button>
+            <button onclick="showPage('health', this)">
+                ❤️ Моё здоровье
+            </button>
+            <button onclick="showPage('sport', this)">
+                🏃 Тренировки
+            </button>
+            <button onclick="showPage('nutrition', this)">
+                🍎 Питание
+            </button>
+            <button onclick="showPage('sleep', this)">
+                😴 Сон
+            </button>
+            <button onclick="showPage('character', this)">
+                🧑 Мой персонаж
+            </button>
+            <button onclick="showPage('week', this)">
+                📅 История и статистика
+            </button>
+            <button onclick="showPage('achievements', this)">
+                🏆 Достижения
+            </button>
+            <button onclick="openSettings()">
+                ⚙️ Настройки
+            </button>
+        </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+        <button class="sync-btn" onclick="syncWithBackend(true)">
+            🔄 Синхронизация
+        </button>
+        <button class="theme-btn" onclick="toggleTheme()">
+            🌙 Сменить тему
+        </button>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <button class="mobile-menu" onclick="toggleSidebar()" aria-label="Меню">☰</button>
+
+        <div class="greeting">
+            <h2 id="greeting">Добро пожаловать 👋</h2>
+            <p>Управляй своим здоровьем, формируй полезные привычки и прокачивай персонажа.</p>
+        </div>
+
+        <div class="topbar-right">
+            <div class="backend-pill" id="backendPill" onclick="syncWithBackend(true)" title="Статус подключения к серверу">
+                <div class="backend-dot"></div>
+                <span id="backendStatusText">Локальный режим</span>
+            </div>
+
+            <div class="streak-badge" title="Дней активности подряд">
+                🔥 <span id="topStreak">0</span> дн.
+            </div>
+
+            <button class="coin-badge" onclick="showPage('character', null)" title="Монеты в гардеробе">
+                🪙 <span id="coinTop">0</span>
+            </button>
+
+            <div class="date-box" id="dateBox">16 августа</div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 1. DASHBOARD PAGE                          -->
+    <!-- ========================================== -->
+    <section class="page active" id="dashboard">
+        
+        <!-- NEW DAY / SAVE BANNER -->
+        <div class="new-day-box">
+            <div>
+                <h3>🌅 Начни новый день</h3>
+                <p>Результаты текущего дня сохранятся в архив и аналитику, персонаж получит монеты и опыт, а дневные счетчики перезапустятся.</p>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="secondary" onclick="saveCurrentDay(true)">
+                    💾 Сохранить сейчас
+                </button>
+                <button class="primary" onclick="startNewDay()">
+                    🌅 Начать новый день
+                </button>
+            </div>
+        </div>
+
+        <!-- HERO SECTION -->
+        <div class="hero">
+            <div class="health-card">
+                <div class="health-top">
+                    <div>
+                        <div class="health-title">Индекс здоровья дня</div>
+                        <div class="health-number">
+                            <span id="healthScore">0</span>
+                            <small>/100</small>
+                        </div>
+                    </div>
+                    <div class="health-status" id="healthStatus">Нужно улучшить</div>
+                </div>
+
+                <div class="progress">
+                    <div id="healthProgress" style="width:0%"></div>
+                </div>
+
+                <div class="health-footer">
+                    <span>Рассчитывается динамически</span>
+                    <span id="healthChange">+0 сегодня</span>
+                </div>
+            </div>
+
+            <div class="level-card">
+                <div class="level-head">
+                    <div>
+                        <div class="level">Уровень <span id="level">1</span></div>
+                        <div class="xp"><span id="xp">0</span> XP</div>
+                    </div>
+                    <div style="font-size:36px">💪</div>
+                </div>
+                <div class="level-desc">Выполняй цели и пей воду, чтобы повышать уровень и получать награды!</div>
+                <div class="xp-bar">
+                    <div id="xpProgress" style="width:0%"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:8px; color:var(--muted); font-size:12px">
+                    <span>Прогресс уровня</span>
+                    <span id="xpText">0 / 100 XP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-name">Всего дней</div>
+                <div class="stat-value"><span id="daysWorking">0</span></div>
+                <div class="stat-change">в трекере</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-icon">🛡️</div>
+                <div class="stat-name">Иммунитет</div>
+                <div class="stat-value"><span id="immunity">50</span>%</div>
+                <div class="stat-change">баланс факторов</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-icon">💧</div>
+                <div class="stat-name">Вода сегодня</div>
+                <div class="stat-value"><span id="waterStat">0.0</span> л</div>
+                <div class="stat-change">цель <span id="waterGoalStat">2.0</span> л</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-icon">🪙</div>
+                <div class="stat-name">Монеты</div>
+                <div class="stat-value"><span id="coinStat">0</span></div>
+                <div class="stat-change">на гардероб</div>
+            </div>
+        </div>
+
+        <!-- GRID 2-COLUMN -->
+        <div class="grid">
+            
+            <!-- DAILY TASKS -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🎯 План на сегодня</h3>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="taskCounter">0/6 выполнено</span>
+                        <button class="secondary" style="padding:6px 10px; font-size:12px;" onclick="openCustomTaskModal()">+ Добавить</button>
+                    </div>
+                </div>
+
+                <!-- SORT FOR TASKS -->
+                <div class="sort-bar">
+                    <span class="sort-label">Сортировка:</span>
+                    <select class="sort-select" id="taskSortSelect" onchange="renderTasks()">
+                        <option value="default">По умолчанию</option>
+                        <option value="uncompleted">Сначала невыполненные</option>
+                        <option value="completed">Сначала выполненные</option>
+                        <option value="name">По алфавиту (А-Я)</option>
+                    </select>
+                </div>
+
+                <div class="daily-list" id="tasks"></div>
+            </div>
+
+            <!-- WATER TRACKER -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>💧 Трекер воды</h3>
+                    <span>Цель: <span id="waterGoalDisplay">2.0</span> л</span>
+                </div>
+
+                <div class="water">
+                    <div class="water-main">
+                        <div class="water-value"><span id="water">0.0</span> л</div>
+                        <div class="progress">
+                            <div id="waterProgress" style="width:0%; background:linear-gradient(90deg,#288cff,#64c3ff)"></div>
+                        </div>
+                        <small style="color:var(--muted)">Осталось выпить: <span id="waterRemaining">2.0</span> л</small>
+                    </div>
+
+                    <div class="water-buttons">
+                        <button onclick="addWater(0.25)">+250 мл</button>
+                        <button onclick="addWater(0.5)">+500 мл</button>
+                        <button onclick="addWater(1.0)">+1.0 л</button>
+                        <button class="danger" style="padding:12px 6px;" onclick="resetWater()">Сброс</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOOD TRACKER -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🧠 Самочувствие и настроение</h3>
+                    <span>Оценка дня</span>
+                </div>
+
+                <div class="moods">
+                    <button class="mood" onclick="setMood(1,this)" title="Тяжело">😔</button>
+                    <button class="mood" onclick="setMood(2,this)" title="Так себе">😐</button>
+                    <button class="mood" onclick="setMood(3,this)" title="Хорошо">🙂</button>
+                    <button class="mood" onclick="setMood(4,this)" title="Отлично">😄</button>
+                    <button class="mood" onclick="setMood(5,this)" title="Супер!">🤩</button>
+                </div>
+
+                <p id="moodText" style="color:var(--muted); font-size:13px; margin-top:14px; line-height:1.5;">
+                    Выбери своё настроение, чтобы отслеживать эмоциональный баланс.
+                </p>
+            </div>
+
+            <!-- 7-DAY ACTIVITY CHART -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>📊 Активность за 7 дней</h3>
+                    <span>Минуты спорта</span>
+                </div>
+                <div class="chart" id="chart"></div>
+            </div>
+
+            <!-- SCHEDULE -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>⏰ Распорядок дня</h3>
+                    <button class="secondary" style="padding:6px 12px; font-size:12px;" onclick="openSettings()">Изменить</button>
+                </div>
+                <div class="schedule" id="schedule"></div>
+            </div>
+
+            <!-- MINI ACHIEVEMENTS -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🏆 Достижения</h3>
+                    <button class="secondary" style="padding:6px 12px; font-size:12px;" onclick="showPage('achievements', null)">Все</button>
+                </div>
+                <div class="achievements-grid" id="miniAchievements"></div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 2. HEALTH PAGE                             -->
+    <!-- ========================================== -->
+    <section class="page" id="health">
+        <div class="card" style="margin-bottom:20px">
+            <div class="card-title">
+                <h3>❤️ Комплексный анализ здоровья</h3>
+                <span>Текущее состояние</span>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-icon">❤️</div>
+                    <div class="stat-name">Общий индекс</div>
+                    <div class="stat-value"><span id="health2">0</span>/100</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🛡️</div>
+                    <div class="stat-name">Иммунитет</div>
+                    <div class="stat-value"><span id="immunity2">50</span>%</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-name">Энергия</div>
+                    <div class="stat-value"><span id="energy">70</span>%</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🧘</div>
+                    <div class="stat-name">Настроение</div>
+                    <div class="stat-value"><span id="moodScore">—</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">
+                    <h3>📋 Факторы здоровья</h3>
+                    <span>Влияние на индекс</span>
+                </div>
+                <div id="healthFactors"></div>
+            </div>
+
+            <!-- BMI & CALORIE CALCULATOR -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🧮 Калькулятор ИМТ и нормы калорий</h3>
+                </div>
+
+                <div class="form">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group">
+                            <label>Вес (кг)</label>
+                            <input type="number" id="calcWeight" placeholder="70" value="70">
+                        </div>
+                        <div class="form-group">
+                            <label>Рост (см)</label>
+                            <input type="number" id="calcHeight" placeholder="175" value="175">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group">
+                            <label>Возраст</label>
+                            <input type="number" id="calcAge" placeholder="25" value="25">
+                        </div>
+                        <div class="form-group">
+                            <label>Пол</label>
+                            <select id="calcGender">
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="primary" onclick="calculateBMI()">Рассчитать показатели</button>
+
+                    <div id="calcResults" style="display:none; margin-top:14px; padding:14px; border-radius:12px; background:rgba(66,229,139,0.08); border:1px solid rgba(66,229,139,0.25);">
+                        <div style="font-weight:700; color:var(--green); margin-bottom:4px;" id="bmiValue">ИМТ: 22.8 (Норма)</div>
+                        <div style="font-size:13px; color:var(--muted);" id="calorieNorm">Суточная норма: 2200 ккал | Вода: 2.2 л</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HEALTH TIPS -->
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-title">
+                    <h3>💡 Персональные рекомендации</h3>
+                </div>
+                <div id="healthTips" style="display:grid; gap:10px; color:var(--muted); line-height:1.6"></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 3. SPORT & WORKOUTS PAGE                   -->
+    <!-- ========================================== -->
+    <section class="page" id="sport">
+        
+        <!-- STOPWATCH & QUICK ACTIONS -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">
+                    <h3>⏱️ Таймер тренировки</h3>
+                    <span>Секундомер</span>
+                </div>
+
+                <div class="stopwatch-box">
+                    <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
+                    <div class="stopwatch-actions">
+                        <button class="primary" id="stopwatchBtn" onclick="toggleStopwatch()">▶ Старт</button>
+                        <button class="secondary" onclick="resetStopwatch()">↺ Сброс</button>
+                        <button class="secondary" style="border-color:var(--green);" onclick="saveStopwatchWorkout()">💾 Записать в тренировки</button>
+                    </div>
+                </div>
+
+                <div class="card-title" style="margin-top:10px;">
+                    <h3>⚡ Быстрое добавление</h3>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+                    <button class="secondary" onclick="addActivity(15, '🚶 Ходьба')">🚶 Ходьба<br><small>15 мин</small></button>
+                    <button class="secondary" onclick="addActivity(20, '🏃 Бег')">🏃 Бег<br><small>20 мин</small></button>
+                    <button class="secondary" onclick="addActivity(30, '🏋️ Силовая')">🏋️ Силовая<br><small>30 мин</small></button>
+                    <button class="secondary" onclick="addActivity(25, '🚴 Велосипед')">🚴 Велосипед<br><small>25 мин</small></button>
+                    <button class="secondary" onclick="addActivity(15, '🧘 Растяжка/Йога')">🧘 Растяжка<br><small>15 мин</small></button>
+                    <button class="secondary" onclick="addActivity(30, '🏊 Плавание')">🏊 Плавание<br><small>30 мин</small></button>
+                </div>
+
+                <div style="margin-top:20px; padding:16px; border-radius:14px; background:rgba(66,229,139,0.08); border:1px solid rgba(66,229,139,0.2);">
+                    <b>Сегодня выполнено:</b> <span id="sportMinutes" style="color:var(--green); font-size:20px; font-weight:800;">0</span> минут активности
+                </div>
+            </div>
+
+            <!-- LOG CUSTOM WORKOUT -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>📝 Добавить свою тренировку</h3>
+                </div>
+
+                <form class="form" onsubmit="event.preventDefault(); addCustomWorkout();">
+                    <div class="form-group">
+                        <label>Название упражнения / активности</label>
+                        <input type="text" id="workoutName" placeholder="Например: Пробежка в парке" required>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group">
+                            <label>Длительность (мин)</label>
+                            <input type="number" id="workoutDuration" placeholder="30" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Сожжено ккал (примерно)</label>
+                            <input type="number" id="workoutCalories" placeholder="180">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Категория</label>
+                        <select id="workoutType">
+                            <option value="Кардио">Кардио / Бег</option>
+                            <option value="Силовая">Силовая тренировка</option>
+                            <option value="Растяжка">Растяжка / Йога</option>
+                            <option value="Спорт">Командный спорт</option>
+                            <option value="Другое">Другая активность</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="primary">+ Сохранить тренировку</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- WORKOUTS HISTORY WITH SORTING -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-title">
+                <h3>📜 Журнал тренировок</h3>
+                <span id="workoutsCount">0 записей</span>
+            </div>
+
+            <!-- SORT BAR FOR WORKOUTS -->
+            <div class="sort-bar">
+                <span class="sort-label">Сортировка:</span>
+                <select class="sort-select" id="workoutSortSelect" onchange="renderWorkouts()">
+                    <option value="date-desc">📅 Сначала новые</option>
+                    <option value="date-asc">📅 Сначала старые</option>
+                    <option value="duration-desc">⏳ Длительность: по убыванию</option>
+                    <option value="duration-asc">⏳ Длительность: по возрастанию</option>
+                    <option value="calories-desc">🔥 Калории: максимум</option>
+                    <option value="name-asc">🔤 Название: А-Я</option>
+                </select>
+
+                <input type="text" class="filter-input" id="workoutSearchInput" placeholder="🔍 Поиск по названию..." oninput="renderWorkouts()">
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Тип</th>
+                            <th>Время</th>
+                            <th>Длительность</th>
+                            <th>Калории</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workoutsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 4. NUTRITION PAGE                          -->
+    <!-- ========================================== -->
+    <section class="page" id="nutrition">
+        <div class="grid">
+            
+            <!-- NUTRITION HABITS CHECKLIST -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🍎 Полезные привычки питания</h3>
+                    <span>Сегодня</span>
+                </div>
+
+                <div class="daily-list">
+                    <div class="task">
+                        <div class="task-left">
+                            <div class="task-icon">🥦</div>
+                            <div>
+                                <div class="task-name">Овощи и зелень</div>
+                                <div class="task-time">Минимум 300г свежих овощей</div>
+                            </div>
+                        </div>
+                        <button class="check" data-nutrition="vegetables" onclick="nutritionTask(this,'vegetables')">✓</button>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-left">
+                            <div class="task-icon">🍳</div>
+                            <div>
+                                <div class="task-name">Качественный белок</div>
+                                <div class="task-time">Яйца, рыба, мясо, творог, бобовые</div>
+                            </div>
+                        </div>
+                        <button class="check" data-nutrition="protein" onclick="nutritionTask(this,'protein')">✓</button>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-left">
+                            <div class="task-icon">🥑</div>
+                            <div>
+                                <div class="task-name">Полезные жиры</div>
+                                <div class="task-time">Орехи, авокадо, оливковое масло</div>
+                            </div>
+                        </div>
+                        <button class="check" data-nutrition="fats" onclick="nutritionTask(this,'fats')">✓</button>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-left">
+                            <div class="task-icon">🍬</div>
+                            <div>
+                                <div class="task-name">Без добавленного сахара</div>
+                                <div class="task-time">Отказ от газировки и сладостей</div>
+                            </div>
+                        </div>
+                        <button class="check" data-nutrition="sugar" onclick="nutritionTask(this,'sugar')">✓</button>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-left">
+                            <div class="task-icon">🌙</div>
+                            <div>
+                                <div class="task-name">Без еды за 3 часа до сна</div>
+                                <div class="task-time">Легкость для качественного отдыха</div>
+                            </div>
+                        </div>
+                        <button class="check" data-nutrition="noLateSnack" onclick="nutritionTask(this,'noLateSnack')">✓</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD MEAL FORM -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>🍽️ Дневник питания</h3>
+                    <span>Калории: <span id="totalCaloriesToday">0</span> / <span id="calorieTargetDisplay">2200</span> ккал</span>
+                </div>
+
+                <form class="form" onsubmit="event.preventDefault(); addMeal();">
+                    <div class="form-group">
+                        <label>Приём пищи</label>
+                        <select id="mealType">
+                            <option value="Завтрак">🍳 Завтрак</option>
+                            <option value="Обед">🍲 Обед</option>
+                            <option value="Ужин">🥗 Ужин</option>
+                            <option value="Перекус">🍎 Перекус</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Что съели</label>
+                        <input type="text" id="mealName" placeholder="Например: Гречка с курицей и салат" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Калории (ккал)</label>
+                        <input type="number" id="mealCalories" placeholder="450" required>
+                    </div>
+
+                    <button type="submit" class="primary">+ Записать приём пищи</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MEALS LIST WITH SORTING -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-title">
+                <h3>📜 Записи приёмов пищи</h3>
+                <span id="mealsCount">0 записей</span>
+            </div>
+
+            <div class="sort-bar">
+                <span class="sort-label">Сортировка:</span>
+                <select class="sort-select" id="mealSortSelect" onchange="renderMeals()">
+                    <option value="time-desc">⏰ Сначала недавние</option>
+                    <option value="time-asc">⏰ Сначала ранние</option>
+                    <option value="cal-desc">🔥 Калории: по убыванию</option>
+                    <option value="cal-asc">🔥 Калории: по возрастанию</option>
+                    <option value="name-asc">🔤 Название: А-Я</option>
+                </select>
+
+                <select class="sort-select" id="mealTypeFilter" onchange="renderMeals()">
+                    <option value="all">Все приёмы</option>
+                    <option value="Завтрак">Завтрак</option>
+                    <option value="Обед">Обед</option>
+                    <option value="Ужин">Ужин</option>
+                    <option value="Перекус">Перекус</option>
+                </select>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Приём пищи</th>
+                            <th>Блюдо</th>
+                            <th>Калории</th>
+                            <th>Время</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mealsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 5. SLEEP PAGE                              -->
+    <!-- ========================================== -->
+    <section class="page" id="sleep">
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-title">
+                <h3>😴 Режим сна и восстановления</h3>
+                <span>Ориентиры</span>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-icon">🌙</div>
+                    <div class="stat-name">Отбой</div>
+                    <div class="stat-value" id="sleepTime">22:30</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">☀️</div>
+                    <div class="stat-name">Подъём</div>
+                    <div class="stat-value" id="wakeTime">07:00</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🛌</div>
+                    <div class="stat-name">Цель сна</div>
+                    <div class="stat-value" id="sleepGoalDisplay">8.5 ч</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-name">Качество сна</div>
+                    <div class="stat-value" id="avgSleepQuality">5 / 5</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- SLEEP CYCLES CALCULATOR -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>💤 Умный калькулятор фаз сна (90 мин)</h3>
+                </div>
+                <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">
+                    Один цикл сна длится ~90 минут. Пробуждение между циклами дарит бодрость и лёгкость.
+                </p>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Во сколько планируешь лечь спать?</label>
+                    <input type="time" id="sleepCalcTime" value="23:00" onchange="calculateSleepCycles()">
+                </div>
+
+                <div id="sleepCycleResults" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;"></div>
+            </div>
+
+            <!-- SLEEP JOURNAL ENTRY -->
+            <div class="card">
+                <div class="card-title">
+                    <h3>📝 Записать сон</h3>
+                </div>
+
+                <form class="form" onsubmit="event.preventDefault(); addSleepLog();">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group">
+                            <label>Лег спать</label>
+                            <input type="time" id="logBedtime" value="23:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Проснулся</label>
+                            <input type="time" id="logWaketime" value="07:30" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Оценка качества сна (1-5)</label>
+                        <select id="logQuality">
+                            <option value="5">⭐⭐⭐⭐⭐ Великолепно (бодр и свеж)</option>
+                            <option value="4">⭐⭐⭐⭐ Хорошо (выспался)</option>
+                            <option value="3">⭐⭐⭐ Нормально</option>
+                            <option value="2">⭐⭐ Плохо (просыпался)</option>
+                            <option value="1">⭐ Ужасно (не выспался)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Заметки</label>
+                        <input type="text" id="logSleepNotes" placeholder="Легко заснул, свежий воздух...">
+                    </div>
+
+                    <button type="submit" class="primary">+ Сохранить сон</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SLEEP LOGS TABLE WITH SORT -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-title">
+                <h3>📜 Журнал сна</h3>
+                <span id="sleepLogsCount">0 записей</span>
+            </div>
+
+            <div class="sort-bar">
+                <span class="sort-label">Сортировка:</span>
+                <select class="sort-select" id="sleepSortSelect" onchange="renderSleepLogs()">
+                    <option value="date-desc">📅 Сначала новые</option>
+                    <option value="date-asc">📅 Сначала старые</option>
+                    <option value="duration-desc">⏳ Длительность: больше</option>
+                    <option value="duration-asc">⏳ Длительность: меньше</option>
+                    <option value="quality-desc">⭐ Оценка: высшая</option>
+                </select>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Отбой</th>
+                            <th>Подъём</th>
+                            <th>Длительность</th>
+                            <th>Качество</th>
+                            <th>Заметки</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sleepTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 6. CHARACTER & WARDROBE                    -->
+    <!-- ========================================== -->
+    <section class="page" id="character">
+        <div class="character-layout">
+            <div class="card character-stage">
+                <div class="character-name" id="charName">Друг</div>
+                <div class="character-level">Уровень <span id="charLevel">1</span> · Серия <span id="charStreak">0</span> дн.</div>
+
+                <div class="character-canvas" id="characterCanvas"></div>
+
+                <div class="character-coin-row">
+                    🪙 <span id="coinCharacter">0</span> монет
+                </div>
+
+                <p style="color:var(--muted); font-size:13px; margin-top:14px; line-height:1.5">
+                    Завершай дни и выполняй цели, чтобы зарабатывать монеты и покупать уникальные образы!
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <h3>👕 Гардероб и Магазин</h3>
+                    <span>Покупки за монеты</span>
+                </div>
+
+                <!-- CATEGORIES TABS -->
+                <div class="shop-tabs" id="shopTabs"></div>
+
+                <!-- SORT AND SEARCH BAR FOR SHOP -->
+                <div class="sort-bar">
+                    <span class="sort-label">Сортировка:</span>
+                    <select class="sort-select" id="shopSortSelect" onchange="renderShop()">
+                        <option value="default">По умолчанию</option>
+                        <option value="price-asc">🪙 Цена: по возрастанию</option>
+                        <option value="price-desc">🪙 Цена: по убыванию</option>
+                        <option value="name-asc">🔤 Название: А-Я</option>
+                        <option value="status-owned">⭐ Сначала купленные</option>
+                        <option value="status-unowned">🔒 Сначала некупленные</option>
+                    </select>
+
+                    <input type="text" class="filter-input" id="shopSearchInput" placeholder="🔍 Поиск предмета..." oninput="renderShop()">
+                </div>
+
+                <div class="shop-grid" id="shopGrid"></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 7. WEEK & HISTORY PAGE                     -->
+    <!-- ========================================== -->
+    <section class="page" id="week">
+        <div class="card" style="margin-bottom:20px">
+            <div class="card-title">
+                <div>
+                    <h3>📅 Недельный обзор и история</h3>
+                    <span>Динамика и результаты</span>
+                </div>
+                <div style="font-size:26px; font-weight:800; color:var(--green)">
+                    <span id="weekScore">0</span>/100 ср.
+                </div>
+            </div>
+
+            <div class="week-summary">
+                <div class="week-card">
+                    <small>📅 Активных дней</small>
+                    <div class="big" id="weekDays">0</div>
+                </div>
+                <div class="week-card">
+                    <small>🏃 Активность за неделю</small>
+                    <div class="big"><span id="weekActivity">0</span> мин</div>
+                </div>
+                <div class="week-card">
+                    <small>💧 Вода за неделю</small>
+                    <div class="big"><span id="weekWater">0</span> л</div>
+                </div>
+                <div class="week-card">
+                    <small>🎯 Выполнено целей</small>
+                    <div class="big"><span id="weekTasks">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FULL HISTORY ARCHIVE WITH SORTING -->
+        <div class="card">
+            <div class="card-title">
+                <h3>📊 Архив всех дней</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="secondary" onclick="exportHistoryCSV()">📥 Экспорт в CSV</button>
+                    <button class="secondary" onclick="exportBackupJSON()">💾 Резервная копия JSON</button>
+                </div>
+            </div>
+
+            <!-- SORT & FILTER CONTROLS FOR HISTORY -->
+            <div class="sort-bar">
+                <span class="sort-label">Сортировка:</span>
+                <select class="sort-select" id="historySortSelect" onchange="renderHistoryTable()">
+                    <option value="date-desc">📅 Дата: Сначала новые</option>
+                    <option value="date-asc">📅 Дата: Сначала старые</option>
+                    <option value="health-desc">❤️ Индекс здоровья: максимум</option>
+                    <option value="health-asc">❤️ Индекс здоровья: минимум</option>
+                    <option value="activity-desc">🏃 Активность: максимум</option>
+                    <option value="water-desc">💧 Вода: максимум</option>
+                    <option value="tasks-desc">🎯 Цели: максимум</option>
+                </select>
+
+                <select class="sort-select" id="historyRangeSelect" onchange="renderHistoryTable()">
+                    <option value="all">Все время</option>
+                    <option value="7">Последние 7 дней</option>
+                    <option value="30">Последние 30 дней</option>
+                </select>
+
+                <input type="text" class="filter-input" id="historySearchInput" placeholder="🔍 Поиск по дате (YYYY-MM-DD)..." oninput="renderHistoryTable()">
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="toggleHistorySort('date')">Дата ⇅</th>
+                            <th class="sortable" onclick="toggleHistorySort('health')">Индекс ⇅</th>
+                            <th class="sortable" onclick="toggleHistorySort('activity')">Активность ⇅</th>
+                            <th class="sortable" onclick="toggleHistorySort('water')">Вода ⇅</th>
+                            <th class="sortable" onclick="toggleHistorySort('tasks')">Цели ⇅</th>
+                            <th>Питание</th>
+                            <th>Настроение</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ALL TIME TOTALS -->
+        <div class="card" style="margin-top:20px;">
+            <div class="card-title">
+                <h3>🏆 Общая статистика за все время</h3>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-name">Всего дней в базе</div>
+                    <div class="stat-value" id="allDays">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🏃</div>
+                    <div class="stat-name">Всего активности</div>
+                    <div class="stat-value"><span id="allActivity">0</span> мин</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">💧</div>
+                    <div class="stat-name">Всего выпито воды</div>
+                    <div class="stat-value"><span id="allWater">0</span> л</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-name">Всего целей выполнено</div>
+                    <div class="stat-value" id="allTasks">0</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 8. ACHIEVEMENTS PAGE                       -->
+    <!-- ========================================== -->
+    <section class="page" id="achievements">
+        <div class="card">
+            <div class="card-title">
+                <div>
+                    <h3>🏆 Достижения и награды</h3>
+                    <span>Получай монеты и XP за рекорды</span>
+                </div>
+                <span id="achievementsUnlockedCount">0 / 0 открыто</span>
+            </div>
+
+            <!-- SORT & FILTER FOR ACHIEVEMENTS -->
+            <div class="sort-bar">
+                <span class="sort-label">Фильтр:</span>
+                <select class="sort-select" id="achievementFilterSelect" onchange="renderAchievements()">
+                    <option value="all">Все награды</option>
+                    <option value="unlocked">Только полученные</option>
+                    <option value="locked">Только в процессе</option>
+                </select>
+
+                <span class="sort-label" style="margin-left:10px;">Сортировка:</span>
+                <select class="sort-select" id="achievementSortSelect" onchange="renderAchievements()">
+                    <option value="status-unlocked">🏆 Сначала полученные</option>
+                    <option value="status-locked">🔒 Сначала закрытые</option>
+                    <option value="name-asc">🔤 По названию (А-Я)</option>
+                    <option value="reward-desc">🪙 По награде (сначала большие)</option>
+                </select>
+            </div>
+
+            <div class="achievements-grid" id="allAchievements"></div>
+        </div>
+    </section>
+
+</main>
+</div>
+
+
+<!-- ========================================== -->
+<!-- MODAL: SETTINGS                            -->
+<!-- ========================================== -->
+<div class="modal" id="settingsModal">
+    <div class="modal-box">
+        <h2>⚙️ Настройки профиля и режима</h2>
+
+        <div class="form">
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input id="nameInput" type="text" placeholder="Твоё имя">
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label>Цель по воде (литры)</label>
+                    <input id="waterGoalInput" type="number" step="0.1" value="2.0">
+                </div>
+                <div class="form-group">
+                    <label>Цель активности (мин)</label>
+                    <input id="activityGoalInput" type="number" value="30">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label>Цель по сну (часы)</label>
+                    <input id="sleepGoalInput" type="number" step="0.5" value="8.0">
+                </div>
+                <div class="form-group">
+                    <label>Цель по калориям (ккал)</label>
+                    <input id="calorieGoalInput" type="number" value="2200">
+                </div>
+            </div>
+
+            <h3 style="font-size:15px; margin-top:10px; color:var(--green)">⏰ Распорядок дня</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label>Подъём</label>
+                    <input id="wakeInput" type="time">
+                </div>
+                <div class="form-group">
+                    <label>Завтрак</label>
+                    <input id="breakfastInput" type="time">
+                </div>
+                <div class="form-group">
+                    <label>Тренировка</label>
+                    <input id="sportInput" type="time">
+                </div>
+                <div class="form-group">
+                    <label>Ужин</label>
+                    <input id="dinnerInput" type="time">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Отбой</label>
+                <input id="sleepInput" type="time">
+            </div>
+
+            <h3 style="font-size:15px; margin-top:10px; color:var(--blue)">🌐 Бэкенд и Синхронизация</h3>
+            <div class="form-group">
+                <label>URL сервера (REST API)</label>
+                <input id="serverUrlInput" type="text" placeholder="http://localhost:3000">
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+                <button type="button" class="secondary" onclick="syncWithBackend(true)">🔄 Проверить и синхронизировать</button>
+                <button type="button" class="secondary" onclick="exportBackupJSON()">📥 Экспорт данных (JSON)</button>
+                <button type="button" class="secondary" onclick="document.getElementById('importFileInput').click()">📤 Импорт данных</button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importBackupJSON(event)">
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary" onclick="saveSettings()">Сохранить настройки</button>
+            <button class="secondary" onclick="closeSettings()">Отмена</button>
+            <button class="danger" onclick="resetAllData()">🗑️ Сбросить всё</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- MODAL: ADD CUSTOM TASK                     -->
+<!-- ========================================== -->
+<div class="modal" id="customTaskModal">
+    <div class="modal-box">
+        <h2>🎯 Добавить свою привычку / цель</h2>
+
+        <form class="form" onsubmit="event.preventDefault(); saveCustomTask();">
+            <div class="form-group">
+                <label>Иконка (эмодзи)</label>
+                <input type="text" id="customTaskIcon" value="⭐" maxlength="4" style="font-size:20px; width:80px; text-align:center;">
+            </div>
+
+            <div class="form-group">
+                <label>Название цели</label>
+                <input type="text" id="customTaskName" placeholder="Например: Чтение книги 20 мин" required>
+            </div>
+
+            <div class="form-group">
+                <label>Описание</label>
+                <input type="text" id="customTaskDesc" placeholder="Развитие концентрации и ума">
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="primary">+ Добавить цель</button>
+                <button type="button" class="secondary" onclick="closeCustomTaskModal()">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- NOTIFICATION TOAST -->
+<div class="notification" id="notification">
+    <span>🎉 Отлично!</span>
+</div>
+
+
+<!-- ======================================================= -->
+<!-- JAVASCRIPT LOGIC & BACKEND SYNC                         -->
+<!-- ======================================================= -->
+<script>
+/* =========================================
+   CORE STATE & DEFAULTS
+========================================= */
+
+const defaultData = {
+    name: "Друг",
+    water: 0,
+    activity: 0,
+    xp: 0,
+    level: 1,
+    streak: 0,
+    mood: 0,
+
+    tasks: {},
+    nutrition: {},
+    customTasks: [],
+    workouts: [],
+    meals: [],
+    sleepLogs: [],
+
+    wake: "07:00",
+    breakfast: "07:30",
+    sport: "18:00",
+    dinner: "19:30",
+    sleep: "22:30",
+
+    currentDate: "",
+    history: [],
+    totalDays: 0,
+    coins: 50,
+
+    wardrobe: {
+        owned: ["skin_default", "outfit_green"],
+        equipped: {
+            skin: "skin_default",
+            outfit: "outfit_green",
+            hat: null,
+            accessory: null
+        }
+    },
+
+    settings: {
+        waterGoal: 2.0,
+        activityGoal: 30,
+        sleepGoal: 8.0,
+        calorieGoal: 2200,
+        serverUrl: "http://localhost:3000"
+    }
+};
+
+let data = JSON.parse(localStorage.getItem("lifefitData")) || structuredClone(defaultData);
+
+// Migrations & safety checks
+data.history = Array.isArray(data.history) ? data.history : [];
+data.tasks = data.tasks || {};
+data.nutrition = data.nutrition || {};
+data.customTasks = Array.isArray(data.customTasks) ? data.customTasks : [];
+data.workouts = Array.isArray(data.workouts) ? data.workouts : [];
+data.meals = Array.isArray(data.meals) ? data.meals : [];
+data.sleepLogs = Array.isArray(data.sleepLogs) ? data.sleepLogs : [];
+data.totalDays = Number(data.totalDays || 0);
+data.coins = Number(data.coins || 0);
+data.wardrobe = data.wardrobe || structuredClone(defaultData.wardrobe);
+data.wardrobe.owned = Array.isArray(data.wardrobe.owned) && data.wardrobe.owned.length ? data.wardrobe.owned : ["skin_default", "outfit_green"];
+data.wardrobe.equipped = data.wardrobe.equipped || {};
+data.wardrobe.equipped.skin = data.wardrobe.equipped.skin || "skin_default";
+data.wardrobe.equipped.outfit = data.wardrobe.equipped.outfit || "outfit_green";
+data.wardrobe.equipped.hat = data.wardrobe.equipped.hat || null;
+data.wardrobe.equipped.accessory = data.wardrobe.equipped.accessory || null;
+data.settings = Object.assign({}, defaultData.settings, data.settings || {});
+
+
+/* =========================================
+   BACKEND CLIENT & STORAGE SYNC
+========================================= */
+
+let backendOnline = false;
+let syncDebounceTimer = null;
+
+function getBackendUrl() {
+    if (window.location.protocol.startsWith("http") && window.location.port) {
+        return window.location.origin;
+    }
+    return data.settings.serverUrl || "http://localhost:3000";
+}
+
+async function syncWithBackend(showMessage = false) {
+    const url = getBackendUrl();
+    const pill = document.getElementById("backendPill");
+    const statusText = document.getElementById("backendStatusText");
+
+    try {
+        const res = await fetch(`${url}/api/data`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (res.ok) {
+            const serverData = await res.json();
+            backendOnline = true;
+            pill.classList.add("online");
+            statusText.textContent = "Сервер подключен";
+
+            // If server has richer history, merge smoothly
+            if (serverData && serverData.history && serverData.history.length >= data.history.length && serverData.totalDays) {
+                // Merge server data
+                data = Object.assign({}, data, serverData);
+                localStorage.setItem("lifefitData", JSON.stringify(data));
+                updateAll();
+            } else {
+                // Push local data to server
+                await pushDataToBackend();
+            }
+
+            if (showMessage) showNotification("🟢 Сервер синхронизирован!");
+            return true;
+        }
+    } catch (e) {
+        backendOnline = false;
+        pill.classList.remove("online");
+        statusText.textContent = "Локальный режим";
+        if (showMessage) showNotification("🟡 Локальный режим (сервер оффлайн)");
+    }
+    return false;
+}
+
+async function pushDataToBackend() {
+    const url = getBackendUrl();
+    try {
+        await fetch(`${url}/api/data`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+    } catch (e) {}
+}
+
+function save() {
+    localStorage.setItem("lifefitData", JSON.stringify(data));
+
+    clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = setTimeout(() => {
+        if (backendOnline) {
+            pushDataToBackend();
+        }
+    }, 600);
+}
+
+
+/* =========================================
+   DATE KEYS & DAY MANAGEMENT
+========================================= */
+
+function getDateKey(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function checkDate() {
+    const today = getDateKey();
+    if (!data.currentDate) {
+        data.currentDate = today;
+        save();
+        return;
+    }
+
+    if (data.currentDate !== today) {
+        saveCurrentDay(false);
+        awardDailyCoins(false);
+
+        data.water = 0;
+        data.activity = 0;
+        data.mood = 0;
+        data.tasks = {};
+        data.nutrition = {};
+        data.currentDate = today;
+
+        save();
+    }
+}
+
+function saveCurrentDay(showMessage = true) {
+    const today = data.currentDate || getDateKey();
+    const health = calculateHealth();
+    const taskCount = Object.values(data.tasks).filter(Boolean).length;
+    const nutritionCount = Object.values(data.nutrition).filter(Boolean).length;
+
+    const dayResult = {
+        date: today,
+        health: health,
+        water: Number(data.water.toFixed(2)),
+        activity: data.activity,
+        tasks: taskCount,
+        nutrition: nutritionCount,
+        mood: data.mood,
+        xp: data.xp,
+        level: data.level
+    };
+
+    const existing = data.history.findIndex(x => x.date === today);
+    if (existing >= 0) {
+        data.history[existing] = dayResult;
+    } else {
+        data.history.push(dayResult);
+        data.totalDays++;
+    }
+
+    save();
+    if (showMessage) showNotification("📅 Результат сохранён в историю!");
+    renderWeek();
+}
+
+function awardDailyCoins(showMessage = true) {
+    const completed = Object.values(data.tasks).filter(Boolean).length;
+    let earned = 10;
+    earned += completed * 3;
+    if (data.water >= (data.settings.waterGoal || 2)) earned += 8;
+    if (data.activity >= (data.settings.activityGoal || 30)) earned += 8;
+    if (data.mood >= 4) earned += 5;
+
+    data.coins += earned;
+    save();
+
+    if (showMessage) showNotification(`🪙 +${earned} монет получено!`);
+    return earned;
+}
+
+function startNewDay() {
+    saveCurrentDay(false);
+    const earned = awardDailyCoins(false);
+
+    const completed = Object.values(data.tasks).filter(Boolean).length;
+    if (completed > 0 || data.activity > 0 || data.water > 0) {
+        data.streak++;
+    } else {
+        data.streak = 0;
+    }
+
+    data.water = 0;
+    data.activity = 0;
+    data.mood = 0;
+    data.tasks = {};
+    data.nutrition = {};
+    data.currentDate = getDateKey();
+
+    data.xp += 20;
+    updateLevel();
+
+    save();
+    updateAll();
+    triggerConfetti();
+    showNotification(`🌅 Новый день начался! +${earned} монет 🪙 и +20 XP ✨`);
+}
+
+
+/* =========================================
+   DATE & GREETING
+========================================= */
+
+function updateDate() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+    const capitalized = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+    const dateBox = document.getElementById("dateBox");
+    if (dateBox) dateBox.textContent = capitalized;
+
+    const hour = now.getHours();
+    let greeting = "Добрый день";
+    if (hour < 6) greeting = "Доброй ночи";
+    else if (hour < 12) greeting = "Доброе утро";
+    else if (hour < 18) greeting = "Добрый день";
+    else greeting = "Добрый вечер";
+
+    const greetEl = document.getElementById("greeting");
+    if (greetEl) greetEl.innerHTML = `${greeting}, ${data.name || "Друг"} 👋`;
+}
+
+
+/* =========================================
+   HEALTH CALCULATIONS
+========================================= */
+
+function calculateHealth() {
+    let score = 40;
+    const completedTasks = Object.values(data.tasks).filter(Boolean).length;
+    const allTasksCount = tasks.length + (data.customTasks ? data.customTasks.length : 0);
+    const taskRatio = allTasksCount > 0 ? (completedTasks / allTasksCount) : 0;
+
+    score += Math.round(taskRatio * 25);
+    const waterGoal = data.settings.waterGoal || 2.0;
+    score += Math.min(15, Math.round((data.water / waterGoal) * 15));
+
+    const activityGoal = data.settings.activityGoal || 30;
+    score += Math.min(15, Math.round((data.activity / activityGoal) * 15));
+
+    const nutritionCount = Object.values(data.nutrition).filter(Boolean).length;
+    score += Math.min(10, nutritionCount * 2);
+
+    if (data.mood >= 4) score += 5;
+    else if (data.mood === 3) score += 3;
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function calculateImmunity() {
+    let value = 40;
+    const waterGoal = data.settings.waterGoal || 2.0;
+    value += Math.min(15, (data.water / waterGoal) * 15);
+
+    const activityGoal = data.settings.activityGoal || 30;
+    value += Math.min(15, (data.activity / activityGoal) * 15);
+
+    const nutrition = Object.values(data.nutrition).filter(Boolean).length;
+    value += nutrition * 4;
+
+    if (data.mood >= 4) value += 10;
+    else if (data.mood === 3) value += 5;
+
+    return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function updateHealth() {
+    const health = calculateHealth();
+    const immunity = calculateImmunity();
+    const waterGoal = data.settings.waterGoal || 2.0;
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    setTxt("healthScore", health);
+    setTxt("health2", health);
+    setTxt("immunity", immunity);
+    setTxt("immunity2", immunity);
+
+    const healthProgress = document.getElementById("healthProgress");
+    if (healthProgress) healthProgress.style.width = health + "%";
+
+    let status = "Нужно улучшить";
+    if (health >= 85) status = "🔥 Отличная форма";
+    else if (health >= 70) status = "👍 Хорошее состояние";
+    else if (health >= 50) status = "👌 Нормально";
+
+    setTxt("healthStatus", status);
+    setTxt("water", data.water.toFixed(1));
+    setTxt("waterStat", data.water.toFixed(1));
+    setTxt("waterGoalStat", waterGoal.toFixed(1));
+    setTxt("waterGoalDisplay", waterGoal.toFixed(1));
+    setTxt("waterRemaining", Math.max(0, waterGoal - data.water).toFixed(1));
+
+    const waterProg = document.getElementById("waterProgress");
+    if (waterProg) waterProg.style.width = Math.min(100, (data.water / waterGoal) * 100) + "%";
+
+    setTxt("sportMinutes", data.activity);
+    setTxt("daysWorking", data.totalDays);
+    setTxt("topStreak", data.streak);
+
+    const energy = Math.min(100, 55 + Math.round(data.activity * 0.4) + (data.mood * 4));
+    setTxt("energy", energy);
+    setTxt("moodScore", data.mood ? data.mood + "/5" : "—");
+
+    const diff = health - 40;
+    setTxt("healthChange", (diff >= 0 ? "+" : "") + diff + " сегодня");
+
+    setTxt("coinTop", data.coins);
+    setTxt("coinStat", data.coins);
+    setTxt("coinCharacter", data.coins);
+}
+
+
+/* =========================================
+   TASKS & SORTING
+========================================= */
+
+const tasks = [
+    { id: "wake", icon: "☀️", name: "Встать вовремя", desc: "Начни день по расписанию" },
+    { id: "water", icon: "💧", name: "Выпить стакан воды", desc: "Запусти обмен веществ" },
+    { id: "breakfast", icon: "🍳", name: "Полезный завтрак", desc: "Белок, клетчатка, энергия" },
+    { id: "sport", icon: "🏃", name: "Физическая активность", desc: "Минимум 20-30 минут спорта" },
+    { id: "walk", icon: "🚶", name: "Прогулка на воздухе", desc: "Свежий воздух и шаги" },
+    { id: "sleep", icon: "🌙", name: "Лечь спать вовремя", desc: "Восстановление организма" }
+];
+
+function getAllTasks() {
+    const list = [...tasks];
+    if (data.customTasks && Array.isArray(data.customTasks)) {
+        data.customTasks.forEach(ct => {
+            list.push({
+                id: ct.id,
+                icon: ct.icon || "⭐",
+                name: ct.name,
+                desc: ct.desc || "Пользовательская цель",
+                isCustom: true
+            });
+        });
+    }
+    return list;
+}
+
+function renderTasks() {
+    const container = document.getElementById("tasks");
+    if (!container) return;
+
+    container.innerHTML = "";
+    let all = getAllTasks();
+
+    // Sorting
+    const sortVal = document.getElementById("taskSortSelect") ? document.getElementById("taskSortSelect").value : "default";
+
+    if (sortVal === "uncompleted") {
+        all.sort((a, b) => (data.tasks[a.id] ? 1 : 0) - (data.tasks[b.id] ? 1 : 0));
+    } else if (sortVal === "completed") {
+        all.sort((a, b) => (data.tasks[b.id] ? 1 : 0) - (data.tasks[a.id] ? 1 : 0));
+    } else if (sortVal === "name") {
+        all.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    }
+
+    all.forEach(task => {
+        const done = !!data.tasks[task.id];
+        const item = document.createElement("div");
+        item.className = "task";
+
+        let deleteBtn = "";
+        if (task.isCustom) {
+            deleteBtn = `<button class="danger" style="padding:4px 8px; font-size:12px; margin-right:8px;" onclick="deleteCustomTask('${task.id}')">✕</button>`;
+        }
+
+        item.innerHTML = `
+            <div class="task-left">
+                <div class="task-icon">${task.icon}</div>
+                <div>
+                    <div class="task-name">${task.name}</div>
+                    <div class="task-time">${task.desc}</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center;">
+                ${deleteBtn}
+                <button class="check ${done ? "done" : ""}" onclick="toggleTask('${task.id}')">✓</button>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+
+    const completed = Object.values(data.tasks).filter(Boolean).length;
+    const taskCounter = document.getElementById("taskCounter");
+    if (taskCounter) taskCounter.textContent = `${completed}/${all.length} выполнено`;
+}
+
+function toggleTask(id) {
+    data.tasks[id] = !data.tasks[id];
+    if (data.tasks[id]) {
+        data.xp += 15;
+        data.coins += 2;
+        showNotification("✅ Цель выполнена! +15 XP · +2 🪙");
+        triggerConfetti();
+    }
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function openCustomTaskModal() {
+    document.getElementById("customTaskModal").classList.add("show");
+}
+
+function closeCustomTaskModal() {
+    document.getElementById("customTaskModal").classList.remove("show");
+}
+
+function saveCustomTask() {
+    const icon = document.getElementById("customTaskIcon").value.trim() || "⭐";
+    const name = document.getElementById("customTaskName").value.trim();
+    const desc = document.getElementById("customTaskDesc").value.trim();
+
+    if (!name) return;
+
+    data.customTasks.push({
+        id: "custom_" + Date.now(),
+        icon: icon,
+        name: name,
+        desc: desc
+    });
+
+    save();
+    closeCustomTaskModal();
+    renderTasks();
+    showNotification("✨ Новая привычка добавлена!");
+}
+
+function deleteCustomTask(id) {
+    data.customTasks = data.customTasks.filter(x => x.id !== id);
+    delete data.tasks[id];
+    save();
+    renderTasks();
+    updateHealth();
+}
+
+
+/* =========================================
+   WATER & MOOD
+========================================= */
+
+function addWater(amount) {
+    data.water = Math.min(8, Number((data.water + amount).toFixed(2)));
+    data.xp += 5;
+    showNotification(`💧 +${Math.round(amount * 1000)} мл воды`);
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function resetWater() {
+    data.water = 0;
+    save();
+    updateAll();
+    showNotification("💧 Счетчик воды сброшен");
+}
+
+function setMood(value, button) {
+    data.mood = value;
+    document.querySelectorAll(".mood").forEach(el => el.classList.remove("selected"));
+    if (button) button.classList.add("selected");
+
+    const messages = {
+        1: "Похоже, сегодня непростой день. Отдохни и не перегружай себя 🌿",
+        2: "Обычный день. Маленькие полезные шаги всё равно приближают к цели ✨",
+        3: "Хорошее, стабильное состояние. Держи правильный ритм! 🚀",
+        4: "Отличное настроение! Используй эту энергию для лучших результатов 💪",
+        5: "🔥 Великолепно! Ты на пике сил и вдохновения!"
+    };
+
+    const moodText = document.getElementById("moodText");
+    if (moodText) moodText.textContent = messages[value];
+
+    data.xp += 5;
+    save();
+    updateAll();
+}
+
+function updateMood() {
+    document.querySelectorAll(".mood").forEach((button, index) => {
+        button.classList.toggle("selected", data.mood === index + 1);
+    });
+
+    if (data.mood) {
+        const messages = {
+            1: "Похоже, сегодня непростой день. Отдохни и не перегружай себя 🌿",
+            2: "Обычный день. Маленькие полезные шаги всё равно приближают к цели ✨",
+            3: "Хорошее, стабильное состояние. Держи правильный ритм! 🚀",
+            4: "Отличное настроение! Используй эту энергию для лучших результатов 💪",
+            5: "🔥 Великолепно! Ты на пике сил и вдохновения!"
+        };
+        const moodText = document.getElementById("moodText");
+        if (moodText) moodText.textContent = messages[data.mood];
+    }
+}
+
+
+/* =========================================
+   WORKOUTS & STOPWATCH
+========================================= */
+
+let stopwatchInterval = null;
+let stopwatchSeconds = 0;
+let isStopwatchRunning = false;
+
+function toggleStopwatch() {
+    const btn = document.getElementById("stopwatchBtn");
+    if (!isStopwatchRunning) {
+        isStopwatchRunning = true;
+        btn.textContent = "⏸ Пауза";
+        btn.classList.add("danger");
+        stopwatchInterval = setInterval(() => {
+            stopwatchSeconds++;
+            updateStopwatchDisplay();
+        }, 1000);
+    } else {
+        isStopwatchRunning = false;
+        btn.textContent = "▶ Продолжить";
+        btn.classList.remove("danger");
+        clearInterval(stopwatchInterval);
+    }
+}
+
+function resetStopwatch() {
+    isStopwatchRunning = false;
+    clearInterval(stopwatchInterval);
+    stopwatchSeconds = 0;
+    updateStopwatchDisplay();
+    const btn = document.getElementById("stopwatchBtn");
+    if (btn) {
+        btn.textContent = "▶ Старт";
+        btn.classList.remove("danger");
+    }
+}
+
+function updateStopwatchDisplay() {
+    const hrs = String(Math.floor(stopwatchSeconds / 3600)).padStart(2, "0");
+    const mins = String(Math.floor((stopwatchSeconds % 3600) / 60)).padStart(2, "0");
+    const secs = String(stopwatchSeconds % 60).padStart(2, "0");
+    const el = document.getElementById("stopwatchDisplay");
+    if (el) el.textContent = `${hrs}:${mins}:${secs}`;
+}
+
+function saveStopwatchWorkout() {
+    const mins = Math.max(1, Math.round(stopwatchSeconds / 60));
+    addActivity(mins, "⏱ Тренировка по таймеру");
+    resetStopwatch();
+}
+
+function addActivity(minutes, type) {
+    data.activity += minutes;
+    data.xp += Math.round(minutes * 0.8);
+    data.coins += Math.round(minutes / 10);
+
+    const now = new Date();
+    data.workouts.unshift({
+        id: "w_" + Date.now(),
+        name: type,
+        type: type.includes("Бег") ? "Кардио" : type.includes("Силовая") ? "Силовая" : "Другое",
+        duration: minutes,
+        calories: Math.round(minutes * 6.5),
+        date: getDateKey(),
+        time: now.toTimeString().slice(0, 5)
+    });
+
+    showNotification(`🏃 ${type}: +${minutes} минут!`);
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function addCustomWorkout() {
+    const name = document.getElementById("workoutName").value.trim();
+    const duration = Number(document.getElementById("workoutDuration").value) || 0;
+    const calories = Number(document.getElementById("workoutCalories").value) || Math.round(duration * 6);
+    const type = document.getElementById("workoutType").value;
+
+    if (!name || duration <= 0) return;
+
+    const now = new Date();
+    data.workouts.unshift({
+        id: "w_" + Date.now(),
+        name: name,
+        type: type,
+        duration: duration,
+        calories: calories,
+        date: getDateKey(),
+        time: now.toTimeString().slice(0, 5)
+    });
+
+    data.activity += duration;
+    data.xp += Math.round(duration * 0.8);
+    showNotification(`💪 Тренировка "${name}" сохранена!`);
+
+    document.getElementById("workoutName").value = "";
+    document.getElementById("workoutDuration").value = "";
+    document.getElementById("workoutCalories").value = "";
+
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function deleteWorkout(id) {
+    data.workouts = data.workouts.filter(w => w.id !== id);
+    save();
+    renderWorkouts();
+}
+
+function renderWorkouts() {
+    const tbody = document.getElementById("workoutsTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let list = [...data.workouts];
+
+    const sortVal = document.getElementById("workoutSortSelect") ? document.getElementById("workoutSortSelect").value : "date-desc";
+    const searchVal = document.getElementById("workoutSearchInput") ? document.getElementById("workoutSearchInput").value.toLowerCase() : "";
+
+    if (searchVal) {
+        list = list.filter(w => w.name.toLowerCase().includes(searchVal) || (w.type && w.type.toLowerCase().includes(searchVal)));
+    }
+
+    if (sortVal === "date-desc") list.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+    else if (sortVal === "date-asc") list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    else if (sortVal === "duration-desc") list.sort((a, b) => b.duration - a.duration);
+    else if (sortVal === "duration-asc") list.sort((a, b) => a.duration - b.duration);
+    else if (sortVal === "calories-desc") list.sort((a, b) => b.calories - a.calories);
+    else if (sortVal === "name-asc") list.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+
+    const countEl = document.getElementById("workoutsCount");
+    if (countEl) countEl.textContent = `${list.length} записей`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">Нет записей тренировок</td></tr>`;
+        return;
+    }
+
+    list.forEach(w => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><b>${w.name}</b></td>
+            <td><span class="health-status" style="padding:3px 8px; font-size:11px;">${w.type || "Спорт"}</span></td>
+            <td>${w.date || ""} ${w.time || ""}</td>
+            <td>${w.duration} мин</td>
+            <td>🔥 ${w.calories} ккал</td>
+            <td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteWorkout('${w.id}')">Удалить</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+/* =========================================
+   NUTRITION & MEALS
+========================================= */
+
+function nutritionTask(button, id) {
+    data.nutrition[id] = !data.nutrition[id];
+    button.classList.toggle("done", data.nutrition[id]);
+
+    if (data.nutrition[id]) {
+        data.xp += 10;
+        data.coins += 1;
+        showNotification("🥗 Отличный выбор для здоровья! +10 XP · +1 🪙");
+    }
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function updateNutritionButtons() {
+    document.querySelectorAll("[data-nutrition]").forEach(button => {
+        const id = button.dataset.nutrition;
+        button.classList.toggle("done", !!data.nutrition[id]);
+    });
+}
+
+function addMeal() {
+    const type = document.getElementById("mealType").value;
+    const name = document.getElementById("mealName").value.trim();
+    const calories = Number(document.getElementById("mealCalories").value) || 0;
+
+    if (!name || calories <= 0) return;
+
+    const now = new Date();
+    data.meals.unshift({
+        id: "m_" + Date.now(),
+        type: type,
+        name: name,
+        calories: calories,
+        date: getDateKey(),
+        time: now.toTimeString().slice(0, 5)
+    });
+
+    data.xp += 5;
+    document.getElementById("mealName").value = "";
+    document.getElementById("mealCalories").value = "";
+
+    showNotification(`🍽️ Запись "${name}" сохранена!`);
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function deleteMeal(id) {
+    data.meals = data.meals.filter(m => m.id !== id);
+    save();
+    renderMeals();
+}
+
+function renderMeals() {
+    const tbody = document.getElementById("mealsTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let list = [...data.meals];
+
+    const sortVal = document.getElementById("mealSortSelect") ? document.getElementById("mealSortSelect").value : "time-desc";
+    const typeFilter = document.getElementById("mealTypeFilter") ? document.getElementById("mealTypeFilter").value : "all";
+
+    if (typeFilter !== "all") {
+        list = list.filter(m => m.type === typeFilter);
+    }
+
+    if (sortVal === "time-desc") list.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+    else if (sortVal === "time-asc") list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    else if (sortVal === "cal-desc") list.sort((a, b) => b.calories - a.calories);
+    else if (sortVal === "cal-asc") list.sort((a, b) => a.calories - b.calories);
+    else if (sortVal === "name-asc") list.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+
+    const countEl = document.getElementById("mealsCount");
+    if (countEl) countEl.textContent = `${list.length} записей`;
+
+    let todayCal = 0;
+    const today = getDateKey();
+    data.meals.filter(m => m.date === today).forEach(m => todayCal += m.calories);
+
+    const totalCalEl = document.getElementById("totalCaloriesToday");
+    if (totalCalEl) totalCalEl.textContent = todayCal;
+
+    const calTargetEl = document.getElementById("calorieTargetDisplay");
+    if (calTargetEl) calTargetEl.textContent = data.settings.calorieGoal || 2200;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Приёмов пищи пока не записано</td></tr>`;
+        return;
+    }
+
+    list.forEach(m => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><b>${m.type}</b></td>
+            <td>${m.name}</td>
+            <td><span style="color:var(--orange); font-weight:700;">${m.calories} ккал</span></td>
+            <td>${m.time || ""}</td>
+            <td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteMeal('${m.id}')">Удалить</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+/* =========================================
+   SLEEP & RECOVERY
+========================================= */
+
+function calculateSleepCycles() {
+    const input = document.getElementById("sleepCalcTime").value;
+    const resultsBox = document.getElementById("sleepCycleResults");
+    if (!input || !resultsBox) return;
+
+    const [hours, mins] = input.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, mins, 0, 0);
+
+    // Sleep latency ~15 min
+    date.setMinutes(date.getMinutes() + 15);
+
+    resultsBox.innerHTML = "";
+    // Cycles 4, 5, 6 (6h, 7.5h, 9h)
+    const cycles = [
+        { cycles: 4, label: "4 цикла (6 ч)", note: "Минимум" },
+        { cycles: 5, label: "5 циклов (7.5 ч)", note: "Оптимально ✨" },
+        { cycles: 6, label: "6 циклов (9 ч)", note: "Глубокий сон" }
+    ];
+
+    cycles.forEach(c => {
+        const wakeDate = new Date(date.getTime() + c.cycles * 90 * 60 * 1000);
+        const timeStr = wakeDate.toTimeString().slice(0, 5);
+        resultsBox.innerHTML += `
+            <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); text-align:center;">
+                <div style="font-size:18px; font-weight:800; color:var(--blue);">${timeStr}</div>
+                <div style="font-size:12px; font-weight:600; margin-top:2px;">${c.label}</div>
+                <div style="font-size:11px; color:var(--muted);">${c.note}</div>
+            </div>
+        `;
+    });
+}
+
+function addSleepLog() {
+    const bedtime = document.getElementById("logBedtime").value;
+    const waketime = document.getElementById("logWaketime").value;
+    const quality = Number(document.getElementById("logQuality").value) || 5;
+    const notes = document.getElementById("logSleepNotes").value.trim();
+
+    const [bH, bM] = bedtime.split(":").map(Number);
+    const [wH, wM] = waketime.split(":").map(Number);
+
+    let dur = (wH + wM / 60) - (bH + bM / 60);
+    if (dur < 0) dur += 24;
+    dur = Number(dur.toFixed(1));
+
+    data.sleepLogs.unshift({
+        id: "s_" + Date.now(),
+        date: getDateKey(),
+        bedtime: bedtime,
+        waketime: waketime,
+        duration: dur,
+        quality: quality,
+        notes: notes || "Хороший сон"
+    });
+
+    data.xp += 10;
+    showNotification("😴 Сон успешно записан!");
+    updateLevel();
+    save();
+    updateAll();
+}
+
+function deleteSleepLog(id) {
+    data.sleepLogs = data.sleepLogs.filter(s => s.id !== id);
+    save();
+    renderSleepLogs();
+}
+
+function renderSleepLogs() {
+    const tbody = document.getElementById("sleepTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let list = [...data.sleepLogs];
+
+    const sortVal = document.getElementById("sleepSortSelect") ? document.getElementById("sleepSortSelect").value : "date-desc";
+
+    if (sortVal === "date-desc") list.sort((a, b) => b.date.localeCompare(a.date));
+    else if (sortVal === "date-asc") list.sort((a, b) => a.date.localeCompare(b.date));
+    else if (sortVal === "duration-desc") list.sort((a, b) => b.duration - a.duration);
+    else if (sortVal === "duration-asc") list.sort((a, b) => a.duration - b.duration);
+    else if (sortVal === "quality-desc") list.sort((a, b) => b.quality - a.quality);
+
+    const countEl = document.getElementById("sleepLogsCount");
+    if (countEl) countEl.textContent = `${list.length} записей`;
+
+    let avgQ = 5;
+    if (list.length > 0) {
+        const sum = list.reduce((acc, x) => acc + x.quality, 0);
+        avgQ = (sum / list.length).toFixed(1);
+    }
+    const avgEl = document.getElementById("avgSleepQuality");
+    if (avgEl) avgEl.textContent = avgQ + " / 5";
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Журнал сна пока пуст</td></tr>`;
+        return;
+    }
+
+    list.forEach(s => {
+        const stars = "⭐".repeat(s.quality);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><b>${s.date}</b></td>
+            <td>🌙 ${s.bedtime}</td>
+            <td>☀️ ${s.waketime}</td>
+            <td><b style="color:var(--blue);">${s.duration} ч</b></td>
+            <td>${stars}</td>
+            <td>${s.notes}</td>
+            <td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteSleepLog('${s.id}')">Удалить</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+/* =========================================
+   LEVEL & XP
+========================================= */
+
+function updateLevel() {
+    while (data.xp >= 100) {
+        data.xp -= 100;
+        data.level++;
+        data.coins += 20;
+        showNotification(`🎉 Новый уровень ${data.level}! Получено +20 монет 🪙`);
+        triggerConfetti();
+    }
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt("level", data.level);
+    setTxt("xp", data.xp);
+    setTxt("xpText", `${data.xp} / 100 XP`);
+
+    const xpProgress = document.getElementById("xpProgress");
+    if (xpProgress) xpProgress.style.width = data.xp + "%";
+}
+
+
+/* =========================================
+   7-DAY CHART
+========================================= */
+
+function getLast7Days() {
+    const result = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = getDateKey(d);
+        const found = data.history.find(x => x.date === key);
+
+        result.push(found || {
+            date: key,
+            health: 0,
+            water: (key === data.currentDate ? data.water : 0),
+            activity: (key === data.currentDate ? data.activity : 0),
+            tasks: (key === data.currentDate ? Object.values(data.tasks).filter(Boolean).length : 0),
+            nutrition: 0,
+            mood: 0
+        });
+    }
+    return result;
+}
+
+function renderChart() {
+    const chart = document.getElementById("chart");
+    if (!chart) return;
+
+    chart.innerHTML = "";
+    const days = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+    const last7 = getLast7Days();
+
+    last7.forEach(day => {
+        const wrap = document.createElement("div");
+        wrap.className = "bar-wrap";
+
+        const val = Number(day.activity || 0);
+        const dObj = new Date(day.date + "T12:00:00");
+        const dayLabel = days[dObj.getDay()];
+
+        wrap.innerHTML = `
+            <div class="bar" style="height:${Math.max(8, Math.min(160, val * 2.5))}px" title="${day.date}: ${val} мин активности"></div>
+            <div class="bar-label">${dayLabel}</div>
+        `;
+        chart.appendChild(wrap);
+    });
+}
+
+
+/* =========================================
+   SCHEDULE & HEALTH FACTORS
+========================================= */
+
+function renderSchedule() {
+    const schedule = document.getElementById("schedule");
+    if (!schedule) return;
+
+    const items = [
+        [data.wake || "07:00", "☀️", "Подъём", "Запуск дня"],
+        [data.breakfast || "07:30", "🍳", "Завтрак", "Полезная энергия"],
+        [data.sport || "18:00", "🏃", "Тренировка", "Сила и выносливость"],
+        [data.dinner || "19:30", "🥗", "Ужин", "Лёгкий рацион"],
+        [data.sleep || "22:30", "🌙", "Сон", "Восстановление"]
+    ];
+
+    schedule.innerHTML = "";
+    items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "schedule-row";
+        row.innerHTML = `
+            <div class="schedule-time">${item[0]}</div>
+            <div class="schedule-icon">${item[1]}</div>
+            <div class="schedule-name">${item[2]}<small>${item[3]}</small></div>
+            <span style="color:var(--green); font-size:12px;">●</span>
+        `;
+        schedule.appendChild(row);
+    });
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt("sleepTime", data.sleep);
+    setTxt("wakeTime", data.wake);
+}
+
+function renderHealthFactors() {
+    const waterGoal = data.settings.waterGoal || 2.0;
+    const actGoal = data.settings.activityGoal || 30;
+    const allTasksCount = getAllTasks().length;
+    const completedTasks = Object.values(data.tasks).filter(Boolean).length;
+
+    const factors = [
+        ["💧", "Водный баланс", Math.min(100, (data.water / waterGoal) * 100)],
+        ["🏃", "Физическая активность", Math.min(100, (data.activity / actGoal) * 100)],
+        ["🎯", "Выполнение привычек", allTasksCount > 0 ? (completedTasks / allTasksCount) * 100 : 0],
+        ["🥗", "Сбалансированное питание", (Object.values(data.nutrition).filter(Boolean).length / 5) * 100],
+        ["🧠", "Эмоциональное состояние", data.mood ? (data.mood / 5) * 100 : 50]
+    ];
+
+    const box = document.getElementById("healthFactors");
+    if (!box) return;
+
+    box.innerHTML = "";
+    factors.forEach(f => {
+        box.innerHTML += `
+            <div style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+                    <span>${f[0]} ${f[1]}</span>
+                    <span style="color:var(--green); font-weight:700;">${Math.round(f[2])}%</span>
+                </div>
+                <div class="progress">
+                    <div style="width:${Math.min(100, f[2])}%"></div>
+                </div>
+            </div>
+        `;
+    });
+
+    const tips = [
+        "💧 Пей чистую воду равномерно в течение дня, чтобы поддерживать энергию и обмен веществ.",
+        "🏃 Даже 20-минутная активная прогулка снижает уровень стресса и улучшает работу сердца.",
+        "😴 Стабильное время отбоя до 23:00 ускоряет выработку мелатонина и восстановление мышц.",
+        "🥗 Старайся заполнять половину тарелки свежими овощами и зеленью.",
+        "🧘 Отслеживай эмоциональное состояние и делай паузы в течение дня для перезагрузки."
+    ];
+
+    const tipsBox = document.getElementById("healthTips");
+    if (tipsBox) {
+        tipsBox.innerHTML = tips.map(x => `<div style="padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.02); border:1px solid var(--border);">${x}</div>`).join("");
+    }
+}
+
+function calculateBMI() {
+    const weight = Number(document.getElementById("calcWeight").value);
+    const height = Number(document.getElementById("calcHeight").value);
+    const age = Number(document.getElementById("calcAge").value);
+    const gender = document.getElementById("calcGender").value;
+
+    if (!weight || !height || height <= 0) return;
+
+    const heightM = height / 100;
+    const bmi = Number((weight / (heightM * heightM)).toFixed(1));
+
+    let status = "Нормальный вес";
+    if (bmi < 18.5) status = "Дефицит массы тела";
+    else if (bmi >= 25 && bmi < 30) status = "Избыточная масса тела";
+    else if (bmi >= 30) status = "Ожирение";
+
+    let bmr = 10 * weight + 6.25 * height - 5 * age + (gender === "male" ? 5 : -161);
+    let normCal = Math.round(bmr * 1.375);
+    let waterNorm = (weight * 0.033).toFixed(1);
+
+    const resBox = document.getElementById("calcResults");
+    resBox.style.display = "block";
+    document.getElementById("bmiValue").textContent = `ИМТ: ${bmi} (${status})`;
+    document.getElementById("calorieNorm").textContent = `Суточная норма: ~${normCal} ккал | Вода: ~${waterNorm} л/день`;
+}
+
+
+/* =========================================
+   CHARACTER & SHOP WITH ADVANCED SORTING
+========================================= */
+
+const shopCategories = [
+    { id: "all", label: "🌟 Все" },
+    { id: "outfit", label: "👕 Одежда" },
+    { id: "skin", label: "🧑 Внешность" },
+    { id: "hat", label: "🧢 Головные уборы" },
+    { id: "accessory", label: "🕶️ Аксессуары" }
+];
+
+const shopItems = [
+    { id: "skin_default", type: "skin", name: "Обычная кожа", price: 0, color: "#e8b48a" },
+    { id: "skin_tan", type: "skin", name: "Загорелая кожа", price: 30, color: "#c98456" },
+    { id: "skin_pale", type: "skin", name: "Светлая кожа", price: 30, color: "#f3d3b8" },
+    { id: "skin_deep", type: "skin", name: "Тёмная кожа", price: 30, color: "#8a5636" },
+
+    { id: "outfit_green", type: "outfit", name: "Изумрудная футболка", price: 0, color: "#42e58b" },
+    { id: "outfit_blue", type: "outfit", name: "Лазурная футболка", price: 25, color: "#48a9ff" },
+    { id: "outfit_orange", type: "outfit", name: "Солнечная футболка", price: 25, color: "#ffad42" },
+    { id: "outfit_purple", type: "outfit", name: "Фиолетовый худи", price: 35, color: "#9b7cff" },
+    { id: "outfit_red", type: "outfit", name: "Алая футболка", price: 25, color: "#ff6475" },
+    { id: "outfit_black", type: "outfit", name: "Стильный чёрный худи", price: 50, color: "#1c2622" },
+
+    { id: "hat_cap", type: "hat", name: "Спортивная кепка", price: 20, icon: "🧢" },
+    { id: "hat_grad", type: "hat", name: "Шапочка магистра", price: 40, icon: "🎓" },
+    { id: "hat_crown", type: "hat", name: "Золотая корона", price: 100, icon: "👑" },
+    { id: "hat_headband", type: "hat", name: "Повязка атлета", price: 25, icon: "🎽" },
+    { id: "hat_party", type: "hat", name: "Праздничный колпак", price: 30, icon: "🎉" },
+
+    { id: "acc_glasses", type: "accessory", name: "Солнцезащитные очки", price: 25, icon: "🕶️" },
+    { id: "acc_watch", type: "accessory", name: "Смарт-часы", price: 35, icon: "⌚" },
+    { id: "acc_medal", type: "accessory", name: "Золотая медаль", price: 60, icon: "🏅" },
+    { id: "acc_backpack", type: "accessory", name: "Спортивный рюкзак", price: 45, icon: "🎒" }
+];
+
+let activeShopTab = "all";
+
+function isOwned(id) {
+    return data.wardrobe.owned.includes(id);
+}
+
+function isEquipped(item) {
+    return data.wardrobe.equipped[item.type] === item.id;
+}
+
+function buyItem(id) {
+    const item = shopItems.find(x => x.id === id);
+    if (!item) return;
+
+    if (isOwned(id)) {
+        equipItem(id);
+        return;
+    }
+
+    if (data.coins < item.price) {
+        showNotification("🪙 Недостаточно монет!");
+        return;
+    }
+
+    data.coins -= item.price;
+    data.wardrobe.owned.push(id);
+    data.wardrobe.equipped[item.type] = id;
+
+    save();
+    updateAll();
+    triggerConfetti();
+    showNotification(`🛍️ Куплено и надето: ${item.name}!`);
+}
+
+function equipItem(id) {
+    const item = shopItems.find(x => x.id === id);
+    if (!item || !isOwned(id)) return;
+
+    data.wardrobe.equipped[item.type] = id;
+    save();
+    updateAll();
+    showNotification(`✨ Надето: ${item.name}`);
+}
+
+function setShopTab(tab) {
+    activeShopTab = tab;
+    renderShop();
+}
+
+function renderShopTabs() {
+    const box = document.getElementById("shopTabs");
+    if (!box) return;
+
+    box.innerHTML = "";
+    shopCategories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "shop-tab" + (activeShopTab === cat.id ? " active" : "");
+        btn.textContent = cat.label;
+        btn.onclick = () => setShopTab(cat.id);
+        box.appendChild(btn);
+    });
+}
+
+function renderShop() {
+    renderShopTabs();
+    const grid = document.getElementById("shopGrid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+    let items = [...shopItems];
+
+    if (activeShopTab !== "all") {
+        items = items.filter(item => item.type === activeShopTab);
+    }
+
+    const searchVal = document.getElementById("shopSearchInput") ? document.getElementById("shopSearchInput").value.toLowerCase() : "";
+    if (searchVal) {
+        items = items.filter(i => i.name.toLowerCase().includes(searchVal));
+    }
+
+    const sortVal = document.getElementById("shopSortSelect") ? document.getElementById("shopSortSelect").value : "default";
+
+    if (sortVal === "price-asc") items.sort((a, b) => a.price - b.price);
+    else if (sortVal === "price-desc") items.sort((a, b) => b.price - a.price);
+    else if (sortVal === "name-asc") items.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    else if (sortVal === "status-owned") items.sort((a, b) => (isOwned(b.id) ? 1 : 0) - (isOwned(a.id) ? 1 : 0));
+    else if (sortVal === "status-unowned") items.sort((a, b) => (isOwned(a.id) ? 1 : 0) - (isOwned(b.id) ? 1 : 0));
+
+    items.forEach(item => {
+        const owned = isOwned(item.id);
+        const equipped = isEquipped(item);
+
+        const card = document.createElement("div");
+        card.className = "shop-item" + (equipped ? " equipped" : "");
+
+        const visual = (item.type === "skin" || item.type === "outfit")
+            ? `<div class="swatch" style="background:${item.color}"></div>`
+            : `<div class="icon">${item.icon}</div>`;
+
+        let btnHtml;
+        if (equipped) btnHtml = `<button disabled>Надето ✓</button>`;
+        else if (owned) btnHtml = `<button class="equip" onclick="equipItem('${item.id}')">Надеть</button>`;
+        else btnHtml = `<button class="buy" onclick="buyItem('${item.id}')">Купить · 🪙 ${item.price}</button>`;
+
+        card.innerHTML = `
+            ${equipped ? '<span class="badge">Надето</span>' : ""}
+            ${visual}
+            <b>${item.name}</b>
+            <div class="price">${item.price === 0 ? "Бесплатно" : "🪙 " + item.price}</div>
+            ${btnHtml}
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function getEquippedItem(type) {
+    const id = data.wardrobe.equipped[type];
+    return shopItems.find(x => x.id === id);
+}
+
+function renderCharacter() {
+    const canvas = document.getElementById("characterCanvas");
+    if (!canvas) return;
+
+    const skin = getEquippedItem("skin") || shopItems.find(x => x.id === "skin_default");
+    const outfit = getEquippedItem("outfit") || shopItems.find(x => x.id === "outfit_green");
+    const hat = getEquippedItem("hat");
+    const accessory = getEquippedItem("accessory");
+
+    const skinColor = skin.color;
+    const outfitColor = outfit.color;
+
+    let hatMarkup = "";
+    if (hat) hatMarkup = `<text x="100" y="46" font-size="44" text-anchor="middle">${hat.icon}</text>`;
+
+    let accMarkup = "";
+    if (accessory) {
+        if (accessory.id === "acc_glasses") accMarkup = `<text x="100" y="98" font-size="26" text-anchor="middle">🕶️</text>`;
+        else if (accessory.id === "acc_backpack") accMarkup = `<text x="168" y="190" font-size="30" text-anchor="middle">🎒</text>`;
+        else accMarkup = `<text x="100" y="215" font-size="24" text-anchor="middle">${accessory.icon}</text>`;
+    }
+
+    canvas.innerHTML = `
+        <svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="216" rx="55" ry="10" fill="rgba(0,0,0,0.28)"></ellipse>
+            <rect x="62" y="140" width="76" height="72" rx="26" fill="${outfitColor}"></rect>
+            <circle cx="58" cy="160" r="14" fill="${skinColor}"></circle>
+            <circle cx="142" cy="160" r="14" fill="${skinColor}"></circle>
+            <circle cx="100" cy="95" r="52" fill="${skinColor}"></circle>
+            <circle cx="80" cy="92" r="6" fill="#20261f"></circle>
+            <circle cx="120" cy="92" r="6" fill="#20261f"></circle>
+            <path d="M 80 118 Q 100 134 120 118" stroke="#20261f" stroke-width="4" fill="none" stroke-linecap="round"></path>
+            ${accMarkup}
+            ${hatMarkup}
+        </svg>
+    `;
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt("charName", data.name || "Друг");
+    setTxt("charLevel", data.level);
+    setTxt("charStreak", data.streak);
+
+    renderShop();
+}
+
+
+/* =========================================
+   WEEK & HISTORY WITH COMPREHENSIVE SORTING
+========================================= */
+
+let currentHistorySortKey = "date-desc";
+
+function toggleHistorySort(key) {
+    if (currentHistorySortKey === key + "-desc") currentHistorySortKey = key + "-asc";
+    else currentHistorySortKey = key + "-desc";
+
+    const select = document.getElementById("historySortSelect");
+    if (select) select.value = currentHistorySortKey;
+    renderHistoryTable();
+}
+
+function renderHistoryTable() {
+    const tbody = document.getElementById("historyTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let list = [...data.history];
+
+    const sortVal = document.getElementById("historySortSelect") ? document.getElementById("historySortSelect").value : currentHistorySortKey;
+    const rangeVal = document.getElementById("historyRangeSelect") ? document.getElementById("historyRangeSelect").value : "all";
+    const searchVal = document.getElementById("historySearchInput") ? document.getElementById("historySearchInput").value.trim().toLowerCase() : "";
+
+    if (searchVal) {
+        list = list.filter(x => x.date.includes(searchVal));
+    }
+
+    if (rangeVal === "7") {
+        list = list.slice(-7);
+    } else if (rangeVal === "30") {
+        list = list.slice(-30);
+    }
+
+    if (sortVal === "date-desc") list.sort((a, b) => b.date.localeCompare(a.date));
+    else if (sortVal === "date-asc") list.sort((a, b) => a.date.localeCompare(b.date));
+    else if (sortVal === "health-desc") list.sort((a, b) => b.health - a.health);
+    else if (sortVal === "health-asc") list.sort((a, b) => a.health - b.health);
+    else if (sortVal === "activity-desc") list.sort((a, b) => b.activity - a.activity);
+    else if (sortVal === "activity-asc") list.sort((a, b) => a.activity - b.activity);
+    else if (sortVal === "water-desc") list.sort((a, b) => b.water - a.water);
+    else if (sortVal === "water-asc") list.sort((a, b) => a.water - b.water);
+    else if (sortVal === "tasks-desc") list.sort((a, b) => b.tasks - a.tasks);
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">История пока пуста. Начни свой первый день!</td></tr>`;
+        return;
+    }
+
+    const moodEmojis = { 1: "😔", 2: "😐", 3: "🙂", 4: "😄", 5: "🤩" };
+
+    list.forEach(day => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><b>${day.date}</b></td>
+            <td><span style="color:var(--green); font-weight:700;">${day.health || 0}/100</span></td>
+            <td>${day.activity || 0} мин</td>
+            <td>${(day.water || 0).toFixed(1)} л</td>
+            <td>${day.tasks || 0} целей</td>
+            <td>${day.nutrition || 0}/5</td>
+            <td>${moodEmojis[day.mood] || "—"}</td>
+            <td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteHistoryDay('${day.date}')">✕</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function deleteHistoryDay(dateKey) {
+    if (!confirm(`Удалить запись за ${dateKey}?`)) return;
+    data.history = data.history.filter(x => x.date !== dateKey);
+    data.totalDays = data.history.length;
+    save();
+    renderWeek();
+    showNotification("🗑️ Запись удалена");
+}
+
+function renderWeek() {
+    const week = getLast7Days();
+
+    let totalActivity = 0;
+    let totalWater = 0;
+    let totalTasks = 0;
+    let activeDays = 0;
+    let healthSum = 0;
+
+    week.forEach(day => {
+        totalActivity += Number(day.activity || 0);
+        totalWater += Number(day.water || 0);
+        totalTasks += Number(day.tasks || 0);
+        if (day.activity > 0 || day.water > 0 || day.tasks > 0) activeDays++;
+        healthSum += Number(day.health || 0);
+    });
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt("weekScore", Math.round(healthSum / 7));
+    setTxt("weekDays", activeDays);
+    setTxt("weekActivity", totalActivity);
+    setTxt("weekWater", totalWater.toFixed(1));
+    setTxt("weekTasks", totalTasks);
+
+    let allActivity = 0;
+    let allWater = 0;
+    let allTasks = 0;
+
+    data.history.forEach(day => {
+        allActivity += Number(day.activity || 0);
+        allWater += Number(day.water || 0);
+        allTasks += Number(day.tasks || 0);
+    });
+
+    setTxt("allDays", data.history.length);
+    setTxt("allActivity", allActivity);
+    setTxt("allWater", allWater.toFixed(1));
+    setTxt("allTasks", allTasks);
+
+    renderHistoryTable();
+}
+
+function exportHistoryCSV() {
+    if (!data.history || data.history.length === 0) {
+        showNotification("История пуста");
+        return;
+    }
+    let csv = "Дата;Индекс здоровья;Активность (мин);Вода (л);Цели;Питание;Настроение\n";
+    data.history.forEach(d => {
+        csv += `${d.date};${d.health};${d.activity};${d.water};${d.tasks};${d.nutrition};${d.mood}\n`;
+    });
+
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `lifefit_history_${getDateKey()}.csv`;
+    link.click();
+}
+
+function exportBackupJSON() {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `lifefit_backup_${getDateKey()}.json`;
+    link.click();
+    showNotification("💾 Резервная копия сохранена!");
+}
+
+function importBackupJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (imported && typeof imported === "object") {
+                data = imported;
+                save();
+                updateAll();
+                showNotification("📥 Данные успешно импортированы!");
+                closeSettings();
+            }
+        } catch (err) {
+            alert("Ошибка чтения файла JSON: " + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+
+/* =========================================
+   ACHIEVEMENTS WITH SORTING & FILTERING
+========================================= */
+
+const achievementsList = [
+    {
+        id: "first_step",
+        icon: "🌱",
+        title: "Первый шаг",
+        text: "Выполни первую цель дня",
+        reward: 10,
+        xp: 25,
+        check: () => Object.values(data.tasks).some(Boolean)
+    },
+    {
+        id: "hydration_master",
+        icon: "💧",
+        title: "Водный баланс",
+        text: "Выпей 2 литра воды за день",
+        reward: 15,
+        xp: 30,
+        check: () => data.water >= (data.settings.waterGoal || 2.0)
+    },
+    {
+        id: "movement_pro",
+        icon: "🏃",
+        title: "В движении",
+        text: "30 минут физической активности",
+        reward: 15,
+        xp: 30,
+        check: () => data.activity >= 30
+    },
+    {
+        id: "streak_3",
+        icon: "🔥",
+        title: "Железная серия",
+        text: "3 дня активности подряд",
+        reward: 25,
+        xp: 50,
+        check: () => data.streak >= 3
+    },
+    {
+        id: "streak_7",
+        icon: "⚡",
+        title: "Непобедимый",
+        text: "7 дней активности подряд",
+        reward: 50,
+        xp: 100,
+        check: () => data.streak >= 7
+    },
+    {
+        id: "level_2",
+        icon: "💪",
+        title: "Сила воли",
+        text: "Достигни 2 уровня персонажа",
+        reward: 20,
+        xp: 40,
+        check: () => data.level >= 2
+    },
+    {
+        id: "level_5",
+        icon: "👑",
+        title: "Грандмастер",
+        text: "Достигни 5 уровня персонажа",
+        reward: 80,
+        xp: 150,
+        check: () => data.level >= 5
+    },
+    {
+        id: "all_tasks",
+        icon: "🏆",
+        title: "Идеальный день",
+        text: "Выполни абсолютно все цели плана",
+        reward: 30,
+        xp: 60,
+        check: () => {
+            const all = getAllTasks();
+            return all.length > 0 && Object.values(data.tasks).filter(Boolean).length >= all.length;
+        }
+    },
+    {
+        id: "healthy_eater",
+        icon: "🥗",
+        title: "Правильное питание",
+        text: "Отметь 4 правила питания",
+        reward: 20,
+        xp: 40,
+        check: () => Object.values(data.nutrition).filter(Boolean).length >= 4
+    },
+    {
+        id: "collector",
+        icon: "🪙",
+        title: "Богач",
+        text: "Накопи 100 монет",
+        reward: 30,
+        xp: 50,
+        check: () => data.coins >= 100
+    },
+    {
+        id: "wardrobe_fan",
+        icon: "👕",
+        title: "Модник",
+        text: "Собери 5 предметов гардероба",
+        reward: 25,
+        xp: 45,
+        check: () => data.wardrobe.owned.length >= 5
+    }
+];
+
+function renderAchievements() {
+    const mini = document.getElementById("miniAchievements");
+    const full = document.getElementById("allAchievements");
+
+    if (mini) {
+        mini.innerHTML = "";
+        achievementsList.slice(0, 3).forEach(a => {
+            const unlocked = a.check();
+            const el = document.createElement("div");
+            el.className = "achievement " + (unlocked ? "unlocked" : "");
+            el.innerHTML = `
+                <div class="achievement-icon">${a.icon}</div>
+                <b>${a.title}</b>
+                <p>${a.text}</p>
+                <div class="reward">${unlocked ? "✅ Получено" : `🪙 +${a.reward} · ${a.xp} XP`}</div>
+            `;
+            mini.appendChild(el);
+        });
+    }
+
+    if (full) {
+        full.innerHTML = "";
+        let list = [...achievementsList];
+
+        const filterVal = document.getElementById("achievementFilterSelect") ? document.getElementById("achievementFilterSelect").value : "all";
+        const sortVal = document.getElementById("achievementSortSelect") ? document.getElementById("achievementSortSelect").value : "status-unlocked";
+
+        if (filterVal === "unlocked") list = list.filter(a => a.check());
+        else if (filterVal === "locked") list = list.filter(a => !a.check());
+
+        if (sortVal === "status-unlocked") list.sort((a, b) => (b.check() ? 1 : 0) - (a.check() ? 1 : 0));
+        else if (sortVal === "status-locked") list.sort((a, b) => (a.check() ? 1 : 0) - (b.check() ? 1 : 0));
+        else if (sortVal === "name-asc") list.sort((a, b) => a.title.localeCompare(b.title, "ru"));
+        else if (sortVal === "reward-desc") list.sort((a, b) => b.reward - a.reward);
+
+        const unlockedCount = achievementsList.filter(a => a.check()).length;
+        const countDisplay = document.getElementById("achievementsUnlockedCount");
+        if (countDisplay) countDisplay.textContent = `${unlockedCount} / ${achievementsList.length} открыто`;
+
+        list.forEach(a => {
+            const unlocked = a.check();
+            const el = document.createElement("div");
+            el.className = "achievement " + (unlocked ? "unlocked" : "");
+            el.innerHTML = `
+                <div class="achievement-icon">${a.icon}</div>
+                <b>${a.title}</b>
+                <p>${a.text}</p>
+                <div class="reward">${unlocked ? "✅ Выполнено!" : `🪙 +${a.reward} монет · ${a.xp} XP`}</div>
+            `;
+            full.appendChild(el);
+        });
+    }
+}
+
+
+/* =========================================
+   SETTINGS MODAL & DATA RESET
+========================================= */
+
+function openSettings() {
+    document.getElementById("settingsModal").classList.add("show");
+    document.getElementById("nameInput").value = data.name || "Друг";
+    document.getElementById("wakeInput").value = data.wake || "07:00";
+    document.getElementById("breakfastInput").value = data.breakfast || "07:30";
+    document.getElementById("sportInput").value = data.sport || "18:00";
+    document.getElementById("dinnerInput").value = data.dinner || "19:30";
+    document.getElementById("sleepInput").value = data.sleep || "22:30";
+
+    document.getElementById("waterGoalInput").value = data.settings.waterGoal || 2.0;
+    document.getElementById("activityGoalInput").value = data.settings.activityGoal || 30;
+    document.getElementById("sleepGoalInput").value = data.settings.sleepGoal || 8.0;
+    document.getElementById("calorieGoalInput").value = data.settings.calorieGoal || 2200;
+    document.getElementById("serverUrlInput").value = data.settings.serverUrl || "http://localhost:3000";
+}
+
+function closeSettings() {
+    document.getElementById("settingsModal").classList.remove("show");
+}
+
+function saveSettings() {
+    data.name = document.getElementById("nameInput").value.trim() || "Друг";
+    data.wake = document.getElementById("wakeInput").value || "07:00";
+    data.breakfast = document.getElementById("breakfastInput").value || "07:30";
+    data.sport = document.getElementById("sportInput").value || "18:00";
+    data.dinner = document.getElementById("dinnerInput").value || "19:30";
+    data.sleep = document.getElementById("sleepInput").value || "22:30";
+
+    data.settings.waterGoal = Number(document.getElementById("waterGoalInput").value) || 2.0;
+    data.settings.activityGoal = Number(document.getElementById("activityGoalInput").value) || 30;
+    data.settings.sleepGoal = Number(document.getElementById("sleepGoalInput").value) || 8.0;
+    data.settings.calorieGoal = Number(document.getElementById("calorieGoalInput").value) || 2200;
+    data.settings.serverUrl = document.getElementById("serverUrlInput").value.trim() || "http://localhost:3000";
+
+    save();
+    updateAll();
+    closeSettings();
+    showNotification("⚙️ Настройки успешно сохранены!");
+}
+
+function resetAllData() {
+    if (!confirm("⚠️ Вы уверены, что хотите сбросить ВСЕ данные, историю, персонажа и настройки?")) return;
+
+    localStorage.removeItem("lifefitData");
+    data = structuredClone(defaultData);
+    data.currentDate = getDateKey();
+
+    if (backendOnline) {
+        fetch(`${getBackendUrl()}/api/reset`, { method: "POST" }).catch(() => {});
+    }
+
+    save();
+    updateAll();
+    closeSettings();
+    showNotification("🗑️ Все данные успешно сброшены");
+}
+
+
+/* =========================================
+   NAVIGATION & UI UTILITIES
+========================================= */
+
+function showPage(pageId, button) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    const target = document.getElementById(pageId);
+    if (target) target.classList.add("active");
+
+    document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+    if (button) {
+        button.classList.add("active");
+    } else {
+        const navBtn = Array.from(document.querySelectorAll(".menu button"))
+            .find(b => b.getAttribute("onclick") && b.getAttribute("onclick").includes(`'${pageId}'`));
+        if (navBtn) navBtn.classList.add("active");
+    }
+
+    document.getElementById("sidebar").classList.remove("open");
+
+    if (pageId === "week") renderWeek();
+    if (pageId === "character") renderCharacter();
+    if (pageId === "achievements") renderAchievements();
+    if (pageId === "sport") renderWorkouts();
+    if (pageId === "nutrition") renderMeals();
+    if (pageId === "sleep") {
+        renderSleepLogs();
+        calculateSleepCycles();
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("light");
+    localStorage.setItem("lifefitTheme", document.body.classList.contains("light") ? "light" : "dark");
+}
+
+if (localStorage.getItem("lifefitTheme") === "light") {
+    document.body.classList.add("light");
+}
+
+let notificationTimer;
+function showNotification(text) {
+    const notification = document.getElementById("notification");
+    if (!notification) return;
+
+    notification.innerHTML = `<span>${text}</span>`;
+    notification.classList.add("show");
+
+    clearTimeout(notificationTimer);
+    notificationTimer = setTimeout(() => {
+        notification.classList.remove("show");
+    }, 2800);
+}
+
+
+/* =========================================
+   CONFETTI PARTICLE ENGINE
+========================================= */
+
+function triggerConfetti() {
+    const canvas = document.getElementById("confettiCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const colors = ["#42e58b", "#48a9ff", "#ffd166", "#ff6475", "#9b7cff", "#ffffff"];
+
+    for (let i = 0; i < 70; i++) {
+        particles.push({
+            x: window.innerWidth / 2 + (Math.random() * 200 - 100),
+            y: window.innerHeight / 2 - 50,
+            vx: (Math.random() - 0.5) * 14,
+            vy: (Math.random() - 0.7) * 16,
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            vRot: (Math.random() - 0.5) * 10,
+            alpha: 1
+        });
+    }
+
+    let frames = 0;
+    function renderConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        frames++;
+
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.35; // gravity
+            p.rotation += p.vRot;
+            p.alpha -= 0.015;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        });
+
+        if (frames < 75) {
+            requestAnimationFrame(renderConfetti);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+    renderConfetti();
+}
+
+
+/* =========================================
+   INITIALIZATION
+========================================= */
+
+function updateAll() {
+    updateDate();
+    updateHealth();
+    updateLevel();
+    renderTasks();
+    renderChart();
+    renderSchedule();
+    renderAchievements();
+    renderHealthFactors();
+    updateNutritionButtons();
+    updateMood();
+    renderCharacter();
+    renderWeek();
+    renderWorkouts();
+    renderMeals();
+    renderSleepLogs();
+    calculateSleepCycles();
+}
+
+checkDate();
+updateAll();
+syncWithBackend(false);
+
+</script>
+</body>
+</html>
